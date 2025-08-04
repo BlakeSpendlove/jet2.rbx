@@ -27,6 +27,7 @@ FLIGHT_LOG_ROLE_ID = 1395904999279820831
 INFRACTION_ROLE_ID = 1396992201636057149
 PROMOTION_ROLE_ID = 1396992201636057149
 FLIGHTLOGS_VIEW_ROLE_ID = 1395904999279820831  # for /flightlogs_view
+FLIGHT_BRIEFING_ROLE_ID = 1397864367680127048  # Add this to your env vars
 
 # Separate channel IDs for commands that send to specific channels:
 INFRACTION_CHANNEL_ID = 1398731768449994793
@@ -92,6 +93,46 @@ async def app_results(interaction: discord.Interaction, user: discord.User, resu
         await interaction.response.send_message(f"Application result sent to {user.mention}.", ephemeral=True)
     except Exception:
         await interaction.response.send_message(f"Failed to send DM to {user.mention}.", ephemeral=True)
+
+# /flight_briefing command
+@bot.tree.command(name="flight_briefing", description="Send a flight briefing with game and VC links.", guild=guild)
+@app_commands.describe(
+    flight_code="Flight code",
+    game_link="Link to the flight simulation game",
+    vc_link="Link to voice chat"
+)
+async def flight_briefing(interaction: discord.Interaction, flight_code: str, game_link: str, vc_link: str):
+    if not has_role(interaction, FLIGHT_BRIEFING_ROLE_ID):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+        return
+
+    footer_text, _ = generate_footer()
+
+    embed = discord.Embed(
+        title=f"Jet2.com | Flight Briefing — {flight_code}",
+        description=(
+            f"✈️ **Flight Code:** {flight_code}\n\n"
+            "Welcome to your flight briefing.\n\n"
+            "Please review all details carefully and join the links below at the scheduled time.\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"**Game Link:** [Click Here]({game_link})  \n"
+            f"**Voice Chat:** [Join Here]({vc_link})\n\n"
+            "━━━━━━━━━━━━━━━━━━━━\n\n"
+            "Friendly low fares. Friendly people."
+        ),
+        color=0x00A3E0  # Your preferred color
+    )
+    embed.set_image(url=BANNER_URL)
+    embed.set_footer(text=footer_text)
+
+    # Add buttons for Game Link and VC Link
+    class BriefingView(discord.ui.View):
+        def __init__(self):
+            super().__init__()
+            self.add_item(discord.ui.Button(label="Game Link", url=game_link))
+            self.add_item(discord.ui.Button(label="Voice Chat", url=vc_link))
+
+    await interaction.response.send_message(embed=embed, view=BriefingView(), ephemeral=False)
 
 # /flight_log command
 @bot.tree.command(name="flight_log", description="Log a flight with evidence.", guild=guild)
