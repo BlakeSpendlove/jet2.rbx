@@ -46,20 +46,35 @@ def has_role(interaction: discord.Interaction, role_id: int) -> bool:
     return any(role.id == role_id for role in interaction.user.roles)
 
 # /embed command
-@bot.tree.command(name="embed", description="Send a custom embed from JSON.", guild=guild)
-@app_commands.describe(embed_json="Embed JSON string")
+@bot.tree.command(name="embed", description="Send a custom embed.", guild=guild)
+@app_commands.describe(embed_json="Embed JSON content")
 async def embed(interaction: discord.Interaction, embed_json: str):
     if not has_role(interaction, EMBED_ROLE_ID):
-        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+        await interaction.response.send_message("You do not have permission.", ephemeral=True)
         return
 
     try:
-        embed_data = json.loads(embed_json)
-        embed_obj = discord.Embed.from_dict(embed_data)
-        await interaction.channel.send(embed=embed_obj)
-        await interaction.response.send_message("Embed sent!", ephemeral=True)
-    except Exception as e:
-        await interaction.response.send_message(f"Invalid embed JSON: {e}", ephemeral=True)
+        data = json.loads(embed_json)
+    except json.JSONDecodeError:
+        await interaction.response.send_message("Invalid JSON.", ephemeral=True)
+        return
+
+    # Check for required fields
+    if not any(k in data for k in ("description", "title", "fields")):
+        await interaction.response.send_message(
+            "Embed JSON must have at least a description, title, or fields.", ephemeral=True
+        )
+        return
+
+    embed = discord.Embed.from_dict(data)
+    # Add banner or footer if you want
+    embed.set_image(url=BANNER_URL)
+    footer_text, _ = generate_footer()
+    embed.set_footer(text=footer_text)
+
+    await interaction.channel.send(embed=embed)
+    await interaction.response.send_message("Embed sent!", ephemeral=True)
+
 
 # /app_results command
 @bot.tree.command(name="app_results", description="Send application result to user.", guild=guild)
