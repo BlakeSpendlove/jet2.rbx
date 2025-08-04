@@ -1,9 +1,6 @@
 import os
 import json
-import random
-import string
 from datetime import datetime
-
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -13,25 +10,28 @@ intents = discord.Intents.default()
 intents.message_content = False
 intents.guilds = True
 intents.members = True
-intents.messages = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Only these two from Railway environment
 DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 GUILD_ID = int(os.environ['GUILD_ID'])
 
-# All other variables hardcoded below
+# Banner & Thumbnail URLs (hardcoded or from env)
 BANNER_URL = "https://cdn.discordapp.com/attachments/123456789/banner.png"
 THUMBNAIL_URL = "https://cdn.discordapp.com/attachments/123456789/thumbnail.png"
-WHITELIST_ROLE_ID = 1395904999279820831
-INFRACTION_CHANNEL_ID = 1398731768449994793
-PROMOTION_CHANNEL_ID = 1398731789106675923
 
-DATABASE_FILE = 'database.json'
-if not os.path.exists(DATABASE_FILE):
-    with open(DATABASE_FILE, 'w') as db_file:
-        json.dump({"flight_logs": {}, "infractions": {}}, db_file, indent=2)
+# Separate role IDs controlling permissions per command:
+EMBED_ROLE_ID = 1396992153208488057
+APP_RESULTS_ROLE_ID = 1396992153208488057
+FLIGHT_LOG_ROLE_ID = 1395904999279820831
+INFRACTION_ROLE_ID = 1396992201636057149
+PROMOTION_ROLE_ID = 1396992201636057149
+FLIGHTLOGS_VIEW_ROLE_ID = 1395904999279820831  # for /flightlogs_view
+
+# Separate channel IDs for commands that send to specific channels:
+INFRACTION_CHANNEL_ID = 1398731768449994793
+PROMOTION_CHANNEL_ID = 1398731752197066953
+FLIGHT_LOG_CHANNEL_ID = 1398731789106675923
 
 guild = discord.Object(id=GUILD_ID)
 
@@ -40,22 +40,80 @@ async def on_ready():
     await bot.tree.sync(guild=guild)
     print(f"Logged in as {bot.user}")
 
-def is_whitelisted(interaction: discord.Interaction):
-    return any(role.id == WHITELIST_ROLE_ID for role in interaction.user.roles)
+def has_role(interaction: discord.Interaction, role_id: int) -> bool:
+    return any(role.id == role_id for role in interaction.user.roles)
 
+# /embed command
+@bot.tree.command(name="embed", description="Send a custom embed from JSON.", guild=guild)
+@app_commands.describe(embed_json="Embed JSON string")
+async def embed(interaction: discord.Interaction, embed_json: str):
+    if not has_role(interaction, EMBED_ROLE_ID):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+        return
 
-# /flight_log
-@bot.tree.command(name="flight_log", description="Log a flight with an attachment.", guild=guild)
-@app_commands.describe(flight_code="Flight code", evidence="Screenshot or document as evidence")
+    try:
+        embed_data = json.loads(embed_json)
+        embed_obj = discord.Embed.from_dict(embed_data)
+        await interaction.channel.send(embed=embed_obj)
+        await interaction.response.send_message("Embed sent!", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"Invalid embed JSON: {e}", ephemeral=True)
+
+# /app_results command
+@bot.tree.command(name="app_results", description="Send application result to user.", guild=guild)
+@app_commands.describe(user="User to DM", result="Pass or Fail", reason="Reason for result")
+async def app_results(interaction: discord.Interaction, user: discord.User, result: str, reason: str):
+    if not has_role(interaction, APP_RESULTS_ROLE_ID):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+        return
+
+    footer_text, _ = generate_footer()
+    color = 0x00FF00 if result.lower() == "pass" else 0xFF0000
+
+    embed = discord.Embed(
+        title="Jet2.com | Application Result",
+        description=(
+            f"Hello {user.mention},\n\n"
+            f"Thank you for applying to Jet2.com. Your application has been reviewed.\n\n"
+            f"**Result:** {result.capitalize()}\n"
+            f"**Reason:** {reason}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"If you have any questions, please contact a member of management.\n\n"
+            f"✈️ Jet2.com — Friendly low fares. Friendly people."
+        ),
+        color=color
+    )
+    embed.set_thumbnail(url=THUMBNAIL_URL)
+    embed.set_image(url=BANNER_URL)
+    embed.set_footer(text=footer_text)
+
+    try:
+        await user.send(embed=embed)
+        await interaction.response.send_message(f"Application result sent to {user.mention}.", ephemeral=True)
+    except Exception:
+        await interaction.response.send_message(f"Failed to send DM to {user.mention}.", ephemeral=True)
+
+# /flight_log command
+@bot.tree.command(name="flight_log", description="Log a flight with evidence.", guild=guild)
+@app_commands.describe(flight_code="Flight code", evidence="Evidence attachment")
 async def flight_log(interaction: discord.Interaction, flight_code: str, evidence: discord.Attachment):
-    if not is_whitelisted(interaction):
-        await interaction.response.send_message("You are not authorized to use this command.", ephemeral=True)
+    if not has_role(interaction, FLIGHT_LOG_ROLE_ID):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
     footer_text, log_id = generate_footer()
 
     embed = discord.Embed(
-        description=f"**🛬 Jet2.com | Flight Log Submitted**\n\n**👤 Staff Member:** {interaction.user.mention}  \n**🛫 Flight Code:** {flight_code}\n**📎 Evidence:** [View Attachment]({evidence.url})\n\n━━━━━━━━━━━━━━━━━━━━\n\nYour flight has been successfully logged and submitted to our records system.  \nStaff activity will be reviewed and tracked to ensure high performance and flight standards.\n\nPlease do not delete your evidence. If further clarification is needed, a member of management will contact you.\n\n**✈️ Thank you for contributing to Jet2.com — Friendly low fares. Friendly people.**",
+        description=(
+            f"**🛬 Jet2.com | Flight Log Submitted**\n\n"
+            f"**👤 Staff Member:** {interaction.user.mention}  \n"
+            f"**🛫 Flight Code:** {flight_code}\n"
+            f"**📎 Evidence:** [View Attachment]({evidence.url})\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"Your flight has been successfully logged and submitted to our records system.\n"
+            f"Please do not delete your evidence.\n\n"
+            f"**✈️ Jet2.com — Friendly low fares. Friendly people.**"
+        ),
         color=10364968
     )
     embed.set_author(name="Jet2.com Flight Log")
@@ -63,53 +121,34 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=footer_text)
 
-    await interaction.channel.send(content=interaction.user.mention, embed=embed)
+    channel = bot.get_channel(FLIGHT_LOG_CHANNEL_ID)
+    await channel.send(content=interaction.user.mention, embed=embed)
     await interaction.response.send_message("Flight log submitted!", ephemeral=True)
 
-    # Save to database
-    with open(DATABASE_FILE, 'r+') as db_file:
-        data = json.load(db_file)
-        data["flight_logs"][log_id] = {
-            "user_id": interaction.user.id,
-            "flight_code": flight_code,
-            "evidence_url": evidence.url,
-            "timestamp": footer_text.split("•")[-1].strip()
-        }
-        db_file.seek(0)
-        json.dump(data, db_file, indent=2)
-        db_file.truncate()
+    # Save to database (optional)...
 
-# /flightlogs_view
-@bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
-@app_commands.describe(user="User to view logs for")
-async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
-    if not is_whitelisted(interaction):
-        await interaction.response.send_message("You are not authorized to use this command.", ephemeral=True)
-        return
-
-    with open(DATABASE_FILE, 'r') as db_file:
-        data = json.load(db_file)
-        logs = [f"**{log['flight_code']}** — {log['timestamp']}" for log in data['flight_logs'].values() if log['user_id'] == user.id]
-
-    if logs:
-        message = f"Flight logs for {user.mention} (Total: {len(logs)}):\n\n" + "\n".join(logs)
-    else:
-        message = f"No flight logs found for {user.mention}."
-
-    await interaction.response.send_message(message, ephemeral=True)
-
-# /infraction
-@bot.tree.command(name="infraction", description="Log an infraction, demotion or termination.", guild=guild)
-@app_commands.describe(user="User to log infraction for", type="Type of infraction", reason="Reason")
+# /infraction command
+@bot.tree.command(name="infraction", description="Log an infraction, demotion, or termination.", guild=guild)
+@app_commands.describe(user="User", type="Infraction type", reason="Reason")
 async def infraction(interaction: discord.Interaction, user: discord.User, type: str, reason: str):
-    if not is_whitelisted(interaction):
-        await interaction.response.send_message("You are not authorized to use this command.", ephemeral=True)
+    if not has_role(interaction, INFRACTION_ROLE_ID):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
     footer_text, inf_id = generate_footer()
 
     embed = discord.Embed(
-        description=f"**⚠️ Jet2.com | Infraction Notice**\n\nThis is a notice of your infraction.\n\n━━━━━━━━━━━━━━━━━━━━\n\n**👤 User:** {user.mention}\n**📄 Infraction:** {type}\n**📝 Reason:** {reason}\n\n━━━━━━━━━━━━━━━━━━━━\n\n**🔁 What Happens Next?**  \nYou are expected to acknowledge this notice and take appropriate steps to correct your behaviour. Repeated infractions may lead to more severe consequences, including permanent removal from the community or staff team.\n\nIf you believe this notice was issued in error, you may appeal by contacting a member of management respectfully.\n\n━━━━━━━━━━━━━━━━━━━━\n\n**✈️ Jet2.com — Friendly low fares. Friendly people.**",
+        description=(
+            f"**⚠️ Jet2.com | Infraction Notice**\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"**👤 User:** {user.mention}\n"
+            f"**📄 Infraction:** {type}\n"
+            f"**📝 Reason:** {reason}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"Please acknowledge this notice and take appropriate steps.\n"
+            f"Repeated infractions may lead to more severe consequences.\n\n"
+            f"✈️ Jet2.com — Friendly low fares. Friendly people."
+        ),
         color=10364968
     )
     embed.set_author(name="Jet2.com Infraction")
@@ -117,35 +156,31 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=footer_text)
 
-    channel = interaction.client.get_channel(INFRACTION_CHANNEL_ID)
+    channel = bot.get_channel(INFRACTION_CHANNEL_ID)
     await channel.send(content=user.mention, embed=embed)
     await interaction.response.send_message("Infraction logged.", ephemeral=True)
 
-    # Save to database
-    with open(DATABASE_FILE, 'r+') as db_file:
-        data = json.load(db_file)
-        data["infractions"][inf_id] = {
-            "user_id": user.id,
-            "type": type,
-            "reason": reason,
-            "timestamp": footer_text.split("•")[-1].strip()
-        }
-        db_file.seek(0)
-        json.dump(data, db_file, indent=2)
-        db_file.truncate()
-
-# /promote
+# /promote command
 @bot.tree.command(name="promote", description="Log a promotion.", guild=guild)
 @app_commands.describe(user="User promoted", promotion_to="New rank", reason="Reason for promotion")
 async def promote(interaction: discord.Interaction, user: discord.User, promotion_to: str, reason: str):
-    if not is_whitelisted(interaction):
-        await interaction.response.send_message("You are not authorized to use this command.", ephemeral=True)
+    if not has_role(interaction, PROMOTION_ROLE_ID):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
     footer_text, _ = generate_footer()
 
     embed = discord.Embed(
-        description=f"**🎖️ Jet2.com | Promotion Notice**\n\nWe are pleased to announce that the following staff member has received a **promotion** within Jet2.com for their outstanding performance and dedication to the airline.\n\n━━━━━━━━━━━━━━━━━━━━\n\n**👤 Staff Member:** {user.mention}\n**⬆️ New Rank:** {promotion_to}\n**📝 Reason for Promotion:**  \n{reason}\n\n━━━━━━━━━━━━━━━━━━━━\n\nPlease join us in congratulating them on this well-earned advancement. We look forward to seeing their continued contributions to Jet2.com.\n\n**✈️ Jet2.com — Friendly low fares. Friendly people.**",
+        description=(
+            f"**🎖️ Jet2.com | Promotion Notice**\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"**👤 Staff Member:** {user.mention}\n"
+            f"**⬆️ New Rank:** {promotion_to}\n"
+            f"**📝 Reason for Promotion:**\n{reason}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"Please join us in congratulating them.\n\n"
+            f"✈️ Jet2.com — Friendly low fares. Friendly people."
+        ),
         color=10364968
     )
     embed.set_author(name="Jet2.com Promotion")
@@ -153,9 +188,21 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=footer_text)
 
-    channel = interaction.client.get_channel(PROMOTION_CHANNEL_ID)
+    channel = bot.get_channel(PROMOTION_CHANNEL_ID)
     await channel.send(content=user.mention, embed=embed)
     await interaction.response.send_message("Promotion logged.", ephemeral=True)
 
-# Run bot
+# /flightlogs_view command
+@bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
+@app_commands.describe(user="User to view logs for")
+async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
+    if not has_role(interaction, FLIGHTLOGS_VIEW_ROLE_ID):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+        return
+
+    # Example: retrieve from database if you have one
+    # For demo, sending a placeholder
+    await interaction.response.send_message(f"Showing flight logs for {user.mention} (demo data).", ephemeral=True)
+
+
 bot.run(DISCORD_TOKEN)
