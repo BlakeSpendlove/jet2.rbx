@@ -33,6 +33,7 @@ FLIGHT_BRIEFING_ROLE_ID = 1397864367680127048  # Add this to your env vars
 INFRACTION_CHANNEL_ID = 1398731768449994793
 PROMOTION_CHANNEL_ID = 1398731752197066953
 FLIGHT_LOG_CHANNEL_ID = 1398731789106675923
+FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516  # Your env variable for briefing channel
 
 guild = discord.Object(id=GUILD_ID)
 
@@ -106,12 +107,22 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
+    channel = interaction.client.get_channel(FLIGHT_BRIEFING_CHANNEL_ID)
+    if not channel:
+        await interaction.response.send_message("Flight briefing channel not found.", ephemeral=True)
+        return
+    if interaction.channel.id != FLIGHT_BRIEFING_CHANNEL_ID:
+        await interaction.response.send_message(f"This command can only be used in <#{FLIGHT_BRIEFING_CHANNEL_ID}>.", ephemeral=True)
+        return
+
     footer_text, _ = generate_footer()
 
     embed = discord.Embed(
         title=f"Jet2.com | Flight Briefing — {flight_code}",
         description=(
-            f"✈️ **Flight Code:** {flight_code}\n\n"
+            f"@everyone\n\n"
+            f"✈️ **Flight Code:** {flight_code}\n"
+            f"👤 **Host:** {interaction.user.mention}\n\n"
             "Welcome to your flight briefing.\n\n"
             "Please review all details carefully and join the links below at the scheduled time.\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -120,19 +131,19 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
             "━━━━━━━━━━━━━━━━━━━━\n\n"
             "Friendly low fares. Friendly people."
         ),
-        color=0x00A3E0  # Your preferred color
+        color=10364968
     )
     embed.set_image(url=BANNER_URL)
     embed.set_footer(text=footer_text)
 
-    # Add buttons for Game Link and VC Link
     class BriefingView(discord.ui.View):
         def __init__(self):
             super().__init__()
             self.add_item(discord.ui.Button(label="Game Link", url=game_link))
             self.add_item(discord.ui.Button(label="Voice Chat", url=vc_link))
 
-    await interaction.response.send_message(embed=embed, view=BriefingView(), ephemeral=False)
+    await channel.send(content="@everyone", embed=embed, view=BriefingView())
+    await interaction.response.send_message("Flight briefing sent!", ephemeral=True)
 
 # /flight_log command
 @bot.tree.command(name="flight_log", description="Log a flight with evidence.", guild=guild)
