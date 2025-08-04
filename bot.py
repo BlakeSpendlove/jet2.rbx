@@ -59,22 +59,26 @@ async def embed(interaction: discord.Interaction, embed_json: str):
         await interaction.response.send_message("Invalid JSON.", ephemeral=True)
         return
 
-    # Check for required fields
-    if not any(k in data for k in ("description", "title", "fields")):
+    if "embeds" not in data or not isinstance(data["embeds"], list) or len(data["embeds"]) == 0:
+        await interaction.response.send_message("Embed JSON must include an 'embeds' array with at least one embed.", ephemeral=True)
+        return
+
+    embed_data = data["embeds"][0]
+
+    # Validate required fields in the embed object
+    if not any(k in embed_data for k in ("description", "title", "fields")):
         await interaction.response.send_message(
             "Embed JSON must have at least a description, title, or fields.", ephemeral=True
         )
         return
 
-    embed = discord.Embed.from_dict(data)
-    # Add banner or footer if you want
+    embed = discord.Embed.from_dict(embed_data)
     embed.set_image(url=BANNER_URL)
     footer_text, _ = generate_footer()
     embed.set_footer(text=footer_text)
 
     await interaction.channel.send(embed=embed)
     await interaction.response.send_message("Embed sent!", ephemeral=True)
-
 
 # /app_results command
 @bot.tree.command(name="app_results", description="Send application result to user.", guild=guild)
