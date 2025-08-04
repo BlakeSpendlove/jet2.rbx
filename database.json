@@ -1,1 +1,17 @@
-
+{
+  "flight_logs": {
+    "ABC123": {
+      "user_id": 123456789012345678,
+      "flight_code": "LS8800",
+      "timestamp": "04/08/2025 14:10 UTC"
+    }
+  },
+  "infractions": {
+    "DEF456": {
+      "user_id": 987654321098765432,
+      "type": "Demotion",
+      "reason": "Unprofessional behaviour",
+      "timestamp": "04/08/2025 14:30 UTC"
+    }
+  }
+}
