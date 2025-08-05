@@ -325,4 +325,10 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
+@bot.tree.command(name="flightlog_view", description="Alias for /flightlogs_view.", guild=guild)
+@app_commands.describe(user="User to view logs for")
+async def flightlog_view(interaction: discord.Interaction, user: discord.User):
+    await flightlogs_view(interaction, user)
+
+
 bot.run(DISCORD_TOKEN)
