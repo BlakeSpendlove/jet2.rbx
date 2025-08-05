@@ -264,6 +264,30 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     await interaction.response.send_message("Promotion logged.", ephemeral=True)
 
 # /flightlogs_view command
+from discord import app_commands
+import discord
+from datetime import datetime
+
+# Example role check helper, update with your actual role-check logic
+def has_role(interaction: discord.Interaction, role_id: int) -> bool:
+    return any(role.id == role_id for role in interaction.user.roles)
+
+# Dummy example data source — replace with your DB or storage access!
+def get_flight_logs_for_user(user_id: int):
+    # Return a list of dicts with flight log info
+    return [
+        {
+            "flight_code": "AB123",
+            "datetime": datetime(2025, 7, 1, 15, 30),
+            "evidence_url": "https://example.com/evidence1.jpg"
+        },
+        {
+            "flight_code": "CD456",
+            "datetime": datetime(2025, 7, 5, 10, 0),
+            "evidence_url": "https://example.com/evidence2.jpg"
+        }
+    ]
+
 @bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
 @app_commands.describe(user="User to view logs for")
 async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
@@ -271,8 +295,25 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    # Example: retrieve from database if you have one
-    # For demo, sending a placeholder
-    await interaction.response.send_message(f"Showing flight logs for {user.mention} (demo data).", ephemeral=True)
+    flight_logs = get_flight_logs_for_user(user.id)
+
+    if not flight_logs:
+        await interaction.response.send_message(f"No flight logs found for {user.mention}.", ephemeral=True)
+        return
+
+    description_lines = []
+    for log in flight_logs:
+        dt_str = log["datetime"].strftime("%Y-%m-%d %H:%M UTC")
+        description_lines.append(f"• **{log['flight_code']}** — {dt_str} — [Evidence]({log['evidence_url']})")
+
+    embed = discord.Embed(
+        title=f"Flight Logs for {user}",
+        description="\n".join(description_lines),
+        color=discord.Color.blue()
+    )
+    embed.set_footer(text=f"Requested by {interaction.user} • {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}")
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
 
 bot.run(DISCORD_TOKEN)
