@@ -297,38 +297,46 @@ def get_flight_logs_for_user(user_id: int):
             })
     return user_logs
 
-@bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
-@app_commands.describe(user="User to view logs for")
-async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
+# First, define shared logic in a separate function
+async def flightlogs_view_logic(interaction: discord.Interaction, user: discord.User):
     if not has_role(interaction, FLIGHTLOGS_VIEW_ROLE_ID):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    flight_logs = get_flight_logs_for_user(user.id)
-
-    if not flight_logs:
+    user_logs = flight_logs.get(str(user.id), [])
+    if not user_logs:
         await interaction.response.send_message(f"No flight logs found for {user.mention}.", ephemeral=True)
         return
 
-    description_lines = []
-    for log in flight_logs:
-        dt_str = log["datetime"].strftime("%Y-%m-%d %H:%M UTC")
-        description_lines.append(f"• **{log['flight_code']}** — {dt_str} — [Evidence]({log['evidence_url']})")
-
     embed = discord.Embed(
-        title=f"Flight Logs for {user}",
-        description="\n".join(description_lines),
+        title=f"Flight Logs for {user.name}",
         color=discord.Color.blue()
     )
-    embed.set_footer(text=f"Requested by {interaction.user} • {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}")
-    user_logs = [log for log in logs if log['user_id'] == str(user.id)]
+
+    for log in user_logs:
+        flight_code = log.get("flight_code", "Unknown Code")
+        timestamp = log.get("timestamp", "Unknown Time")
+        evidence_link = log.get("evidence", "No Evidence")
+        embed.add_field(
+            name=f"• **{flight_code}**",
+            value=f"Time: {timestamp}\n[Evidence]({evidence_link})",
+            inline=False
+        )
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
+
+# Main command
+@bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
+@app_commands.describe(user="User to view logs for")
+async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
+    await flightlogs_view_logic(interaction, user)
+
+
+# Alias command
 @bot.tree.command(name="flightlog_view", description="Alias for /flightlogs_view.", guild=guild)
 @app_commands.describe(user="User to view logs for")
 async def flightlog_view(interaction: discord.Interaction, user: discord.User):
-    await flightlogs_view(interaction, user)
-
+    await flightlogs_view_logic(interaction, user)
 
 bot.run(DISCORD_TOKEN)
