@@ -35,6 +35,18 @@ PROMOTION_CHANNEL_ID = 1398731752197066953
 FLIGHT_LOG_CHANNEL_ID = 1398731789106675923
 FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516  # Your env variable for briefing channel
 
+DATA_FILE = "/mnt/data/flight_logs.json"
+
+def load_flight_logs():
+    if not os.path.isfile(DATA_FILE):
+        return []
+    with open(DATA_FILE, "r") as f:
+        return json.load(f)
+
+def save_flight_logs(logs):
+    with open(DATA_FILE, "w") as f:
+        json.dump(logs, f, indent=4)
+        
 guild = discord.Object(id=GUILD_ID)
 
 @bot.event
@@ -264,31 +276,19 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     await interaction.response.send_message("Promotion logged.", ephemeral=True)
 
 # /flightlogs_view command
-from discord import app_commands
-import discord
-from datetime import datetime
-
-# Example role check helper, update with your actual role-check logic
-def has_role(interaction: discord.Interaction, role_id: int) -> bool:
-    return any(role.id == role_id for role in interaction.user.roles)
-
-# Dummy example data source — replace with your DB or storage access!
 def get_flight_logs_for_user(user_id: int):
-    # Return a list of dicts with flight log info
-    return [
-        {
-            "flight_code": "AB123",
-            "datetime": datetime(2025, 7, 1, 15, 30),
-            "evidence_url": "https://example.com/evidence1.jpg"
-        },
-        {
-            "flight_code": "CD456",
-            "datetime": datetime(2025, 7, 5, 10, 0),
-            "evidence_url": "https://example.com/evidence2.jpg"
-        }
-    ]
-
-@bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
+    logs = load_flight_logs()
+    user_logs = []
+    for log in logs:
+        if log["user_id"] == user_id:
+            # parse datetime string back to datetime object
+            dt = datetime.fromisoformat(log["datetime"])
+            user_logs.append({
+                "flight_code": log["flight_code"],
+                "datetime": dt,
+                "evidence_url": log["evidence_url"]
+            })
+    return user_logs@bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
 @app_commands.describe(user="User to view logs for")
 async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
     if not has_role(interaction, FLIGHTLOGS_VIEW_ROLE_ID):
