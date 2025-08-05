@@ -45,75 +45,6 @@ async def on_ready():
 def has_role(interaction: discord.Interaction, role_id: int) -> bool:
     return any(role.id == role_id for role in interaction.user.roles)
 
-# Moderation Commands
-from discord import app_commands, Interaction, Member
-from discord.ext import commands
-import discord
-
-EMBED_ROLE_ID = 123456789012345678  # Replace with your whitelisted role ID
-
-class Moderation(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @app_commands.command(name="ban", description="Ban a member from the server.")
-    async def ban(self, interaction: Interaction, user: Member, reason: str):
-        if EMBED_ROLE_ID not in [role.id for role in interaction.user.roles]:
-            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
-            return
-
-        try:
-            await user.send(f"You have been **banned** from **{interaction.guild.name}** for: {reason}")
-        except:
-            pass  # User DMs closed
-
-        await interaction.guild.ban(user, reason=reason)
-        await interaction.response.send_message(f"✅ {user.mention} has been banned for: `{reason}`", ephemeral=True)
-
-    @app_commands.command(name="kick", description="Kick a member from the server.")
-    async def kick(self, interaction: Interaction, user: Member, reason: str):
-        if EMBED_ROLE_ID not in [role.id for role in interaction.user.roles]:
-            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
-            return
-
-        try:
-            await user.send(f"You have been **kicked** from **{interaction.guild.name}** for: {reason}")
-        except:
-            pass
-
-        await interaction.guild.kick(user, reason=reason)
-        await interaction.response.send_message(f"✅ {user.mention} has been kicked for: `{reason}`", ephemeral=True)
-
-async def setup(bot):
-    await bot.add_cog(Moderation(bot))
-
-# --- FUN COMMANDS (Public Access) ---
-
-from discord import app_commands, Interaction
-from discord.ext import commands
-import random
-
-class Fun(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @app_commands.command(name="roll", description="Roll a dice (1-6).")
-    async def roll(self, interaction: Interaction):
-        result = random.randint(1, 6)
-        await interaction.response.send_message(f"🎲 You rolled a **{result}**!")
-
-    @app_commands.command(name="spam", description="Spam a funny message.")
-    @app_commands.describe(text="The text to spam (will be repeated 5 times)")
-    async def spam(self, interaction: Interaction, text: str):
-        if len(text) > 100:
-            await interaction.response.send_message("❌ Text too long.", ephemeral=True)
-            return
-        spammed = "\n".join([f"{text}" for _ in range(5)])
-        await interaction.response.send_message(spammed)
-
-async def setup(bot):
-    await bot.add_cog(Fun(bot))
-
 # /embed command
 @bot.tree.command(name="embed", description="Send a custom embed.", guild=guild)
 @app_commands.describe(embed_json="Embed JSON content")
@@ -343,9 +274,5 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
     # Example: retrieve from database if you have one
     # For demo, sending a placeholder
     await interaction.response.send_message(f"Showing flight logs for {user.mention} (demo data).", ephemeral=True)
-
-tree.add_command(ban)
-tree.add_command(kick)
-tree.add_command(spam)
 
 bot.run(DISCORD_TOKEN)
