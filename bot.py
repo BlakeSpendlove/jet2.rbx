@@ -34,7 +34,7 @@ INFRACTION_CHANNEL_ID = 1398731768449994793
 PROMOTION_CHANNEL_ID = 1398731752197066953
 FLIGHT_LOG_CHANNEL_ID = 1398731789106675923
 FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516  # Your env variable for briefing channel
-
+DATABASE_FILE = "database.json"
 DATA_FILE = "/mnt/data/flight_logs.json"
 
 def load_flight_logs():
@@ -284,27 +284,25 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     await interaction.response.send_message("Promotion logged.", ephemeral=True)
 
 # /flightlogs_view command
-def get_flight_logs_for_user(user_id: int):
-    logs = load_flight_logs()
-    user_logs = []
-    for log in logs:
-        if log["user_id"] == user_id:
-            dt = datetime.fromisoformat(log["datetime"])
-            user_logs.append({
-                "flight_code": log["flight_code"],
-                "datetime": dt,
-                "evidence_url": log["evidence_url"]
-            })
-    return user_logs
+def has_role(interaction: discord.Interaction, role_id: int):
+    return any(role.id == role_id for role in interaction.user.roles)
 
-# First, define shared logic in a separate function
-async def flightlogs_view_logic(interaction: discord.Interaction, user: discord.User):
+@bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
+@app_commands.describe(user="User to view logs for")
+async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
     if not has_role(interaction, FLIGHTLOGS_VIEW_ROLE_ID):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    user_logs = flight_logs.get(str(user.id), [])
-    if not user_logs:
+    try:
+        with open(DATABASE_FILE, "r") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = {}
+
+    logs = data.get("flight_logs", {}).get(str(user.id), [])
+
+    if not logs:
         await interaction.response.send_message(f"No flight logs found for {user.mention}.", ephemeral=True)
         return
 
@@ -313,30 +311,17 @@ async def flightlogs_view_logic(interaction: discord.Interaction, user: discord.
         color=discord.Color.blue()
     )
 
-    for log in user_logs:
-        flight_code = log.get("flight_code", "Unknown Code")
-        timestamp = log.get("timestamp", "Unknown Time")
-        evidence_link = log.get("evidence", "No Evidence")
+    for log in logs:
+        flight_code = log.get("flight_code", "Unknown")
+        timestamp = log.get("timestamp", "Unknown")
+        evidence = log.get("evidence", "No link")
+
         embed.add_field(
             name=f"• **{flight_code}**",
-            value=f"Time: {timestamp}\n[Evidence]({evidence_link})",
+            value=f"Time: {timestamp}\n[Evidence]({evidence})",
             inline=False
         )
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
-
-
-# Main command
-@bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
-@app_commands.describe(user="User to view logs for")
-async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
-    await flightlogs_view_logic(interaction, user)
-
-
-# Alias command
-@bot.tree.command(name="flightlog_view", description="Alias for /flightlogs_view.", guild=guild)
-@app_commands.describe(user="User to view logs for")
-async def flightlog_view(interaction: discord.Interaction, user: discord.User):
-    await flightlogs_view_logic(interaction, user)
-
+    
 bot.run(DISCORD_TOKEN)
