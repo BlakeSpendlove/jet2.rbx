@@ -208,7 +208,15 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
     await channel.send(content=interaction.user.mention, embed=embed)
     await interaction.response.send_message("Flight log submitted!", ephemeral=True)
 
-    # Save to database (optional)...
+    # --- Save the flight log ---
+    logs = load_flight_logs()
+    logs.append({
+        "user_id": interaction.user.id,
+        "datetime": datetime.utcnow().isoformat(),
+        "flight_code": flight_code,
+        "evidence_url": evidence.url
+    })
+    save_flight_logs(logs)
 
 # /infraction command
 @bot.tree.command(name="infraction", description="Log an infraction, demotion, or termination.", guild=guild)
