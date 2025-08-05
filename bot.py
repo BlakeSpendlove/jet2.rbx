@@ -177,61 +177,54 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
     await interaction.response.send_message("Flight briefing sent!", ephemeral=True)
 
 # /flight_log command
-@bot.tree.command(name="flight_log", description="Log a flight with evidence.", guild=guild)
-@app_commands.describe(flight_code="Flight code", evidence="Evidence attachment")
-async def flight_log(interaction: discord.Interaction, flight_code: str, evidence: discord.Attachment):
-    if not has_role(interaction, FLIGHT_LOG_ROLE_ID):
+@bot.tree.command(name="flight_log", description="Log a flight.", guild=guild)
+@app_commands.describe(user="User to log the flight for", flight_code="Flight code", file="Evidence file")
+async def flight_log(interaction: discord.Interaction, user: discord.User, flight_code: str, file: discord.Attachment):
+    if not has_role(interaction, FLIGHTLOG_ROLE_ID):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    footer_text, log_id = generate_footer()
+    await interaction.response.send_message(f"{user.mention} has been logged for flight `{flight_code}`.", ephemeral=True)
+
+    evidence_url = file.url
+    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    embed_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
     embed = discord.Embed(
-        description=(
-            f"**🛬 Jet2.com | Flight Log Submitted**\n\n"
-            f"**👤 Staff Member:** {interaction.user.mention}  \n"
-            f"**🛫 Flight Code:** {flight_code}\n"
-            f"**📎 Evidence:** [View Attachment]({evidence.url})\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"Your flight has been successfully logged and submitted to our records system.\n"
-            f"Please do not delete your evidence.\n\n"
-            f"**✈️ Jet2.com — Friendly low fares. Friendly people.**"
-        ),
-        color=10364968
+        title="✈️ Flight Log",
+        description=f"**Flight Code:** {flight_code}\n**Logged User:** {user.mention}",
+        color=discord.Color.blue()
     )
-    embed.set_author(name="Jet2.com Flight Log")
     embed.set_image(url=BANNER_URL)
-    embed.set_thumbnail(url=THUMBNAIL_URL)
-    embed.set_footer(text=footer_text)
+    embed.add_field(name="Evidence", value=f"[Click to view evidence]({evidence_url})", inline=False)
+    embed.set_footer(text=f"ID: {embed_id} • Logged {timestamp}")
 
-    channel = bot.get_channel(FLIGHT_LOG_CHANNEL_ID)
-    await channel.send(content=interaction.user.mention, embed=embed)
-    await interaction.response.send_message("Flight log submitted!", ephemeral=True)
+    log_channel = bot.get_channel(FLIGHTLOG_CHANNEL_ID)
+    await log_channel.send(embed=embed)
 
-    # --- Save the flight log ---
-with open("database.json", "r") as f:
+    # Save to JSON
     try:
-        data = json.load(f)
-    except json.JSONDecodeError:
+        with open("database.json", "r") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
         data = {}
 
-log_entry = {
-    "flight_code": flight_code,
-    "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
-    "evidence": evidence_url
-}
+    log_entry = {
+        "flight_code": flight_code,
+        "timestamp": timestamp,
+        "evidence": evidence_url
+    }
 
-# Ensure nesting under flight_logs
-if "flight_logs" not in data:
-    data["flight_logs"] = {}
+    if "flight_logs" not in data:
+        data["flight_logs"] = {}
 
-if str(user.id) not in data["flight_logs"]:
-    data["flight_logs"][str(user.id)] = []
+    if str(user.id) not in data["flight_logs"]:
+        data["flight_logs"][str(user.id)] = []
 
-data["flight_logs"][str(user.id)].append(log_entry)
+    data["flight_logs"][str(user.id)].append(log_entry)
 
-with open("database.json", "w") as f:
-    json.dump(data, f, indent=4)
+    with open("database.json", "w") as f:
+        json.dump(data, f, indent=4)
 
 # /infraction command
 @bot.tree.command(name="infraction", description="Log an infraction, demotion, or termination.", guild=guild)
