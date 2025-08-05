@@ -34,20 +34,10 @@ INFRACTION_CHANNEL_ID = 1398731768449994793
 PROMOTION_CHANNEL_ID = 1398731752197066953
 FLIGHT_LOG_CHANNEL_ID = 1398731789106675923
 FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516  # Your env variable for briefing channel
-DATABASE_FILE = "database.json"
-DATA_FILE = "/mnt/data/flight_logs.json"
 
-def load_flight_logs():
-    if not os.path.isfile(DATA_FILE):
-        return []
-    with open(DATA_FILE, "r") as f:
-        return json.load(f)
-
-def save_flight_logs(logs):
-    with open(DATA_FILE, "w") as f:
-        json.dump(logs, f, indent=4)
-        
 guild = discord.Object(id=GUILD_ID)
+user_flight_logs = {}  # key: user.id, value: list of flight log dicts
+
 
 @bot.event
 async def on_ready():
@@ -177,54 +167,49 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
     await interaction.response.send_message("Flight briefing sent!", ephemeral=True)
 
 # /flight_log command
-@bot.tree.command(name="flight_log", description="Log a flight.", guild=guild)
-@app_commands.describe(user="User to log the flight for", flight_code="Flight code", file="Evidence file")
-async def flight_log(interaction: discord.Interaction, user: discord.User, flight_code: str, file: discord.Attachment):
-    if not has_role(interaction, FLIGHTLOG_ROLE_ID):
+@bot.tree.command(name="flight_log", description="Log a flight with evidence.", guild=guild)
+@app_commands.describe(flight_code="Flight code", evidence="Evidence attachment")
+async def flight_log(interaction: discord.Interaction, flight_code: str, evidence: discord.Attachment):
+    if not has_role(interaction, FLIGHT_LOG_ROLE_ID):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    await interaction.response.send_message(f"{user.mention} has been logged for flight `{flight_code}`.", ephemeral=True)
-
-    evidence_url = file.url
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-    embed_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    footer_text, log_id = generate_footer()
 
     embed = discord.Embed(
-        title="✈️ Flight Log",
-        description=f"**Flight Code:** {flight_code}\n**Logged User:** {user.mention}",
-        color=discord.Color.blue()
+        description=(
+            f"**🛬 Jet2.com | Flight Log Submitted**\n\n"
+            f"**👤 Staff Member:** {interaction.user.mention}  \n"
+            f"**🛫 Flight Code:** {flight_code}\n"
+            f"**📎 Evidence:** [View Attachment]({evidence.url})\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"Your flight has been successfully logged and submitted to our records system.\n"
+            f"Please do not delete your evidence.\n\n"
+            f"**✈️ Jet2.com — Friendly low fares. Friendly people.**"
+        ),
+        color=10364968
     )
+    embed.set_author(name="Jet2.com Flight Log")
     embed.set_image(url=BANNER_URL)
-    embed.add_field(name="Evidence", value=f"[Click to view evidence]({evidence_url})", inline=False)
-    embed.set_footer(text=f"ID: {embed_id} • Logged {timestamp}")
+    embed.set_thumbnail(url=THUMBNAIL_URL)
+    embed.set_footer(text=footer_text)
 
-    log_channel = bot.get_channel(FLIGHTLOG_CHANNEL_ID)
-    await log_channel.send(embed=embed)
+    channel = bot.get_channel(FLIGHT_LOG_CHANNEL_ID)
+    await channel.send(content=interaction.user.mention, embed=embed)
+    await interaction.response.send_message("Flight log submitted!", ephemeral=True)
 
-    # Save to JSON
-    try:
-        with open("database.json", "r") as f:
-            data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        data = {}
+# Store the flight log for the user
+entry = {
+    "flight_code": flight_code,
+    "route": route,
+    "duration": duration,
+    "notes": notes,
+    "id": generate_unique_id(),  # your existing function
+    "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+}
 
-    log_entry = {
-        "flight_code": flight_code,
-        "timestamp": timestamp,
-        "evidence": evidence_url
-    }
-
-    if "flight_logs" not in data:
-        data["flight_logs"] = {}
-
-    if str(user.id) not in data["flight_logs"]:
-        data["flight_logs"][str(user.id)] = []
-
-    data["flight_logs"][str(user.id)].append(log_entry)
-
-    with open("database.json", "w") as f:
-        json.dump(data, f, indent=4)
+user_logs = user_flight_logs.setdefault(interaction.user.id, [])
+user_logs.append(entry)
 
 # /infraction command
 @bot.tree.command(name="infraction", description="Log an infraction, demotion, or termination.", guild=guild)
@@ -273,7 +258,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         description=(
             f"**🎖️ Jet2.com | Promotion Notice**\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"**👤 Staff Member:** {interaction.user.mention}\n"  # fixed here
+            f"**👤 Staff Member:** {user.mention}\n"
             f"**⬆️ New Rank:** {promotion_to}\n"
             f"**📝 Reason for Promotion:**\n{reason}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -287,14 +272,11 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=footer_text)
 
-    channel = interaction.client.get_channel(PROMOTION_CHANNEL_ID)
+    channel = bot.get_channel(PROMOTION_CHANNEL_ID)
     await channel.send(content=user.mention, embed=embed)
     await interaction.response.send_message("Promotion logged.", ephemeral=True)
 
 # /flightlogs_view command
-def has_role(interaction: discord.Interaction, role_id: int):
-    return any(role.id == role_id for role in interaction.user.roles)
-
 @bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
 @app_commands.describe(user="User to view logs for")
 async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
@@ -302,34 +284,27 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    try:
-        with open(DATABASE_FILE, "r") as f:
-            data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        data = {}
+logs = user_flight_logs.get(user.id, [])
 
-    logs = data.get("flight_logs", {}).get(str(user.id), [])
+if not logs:
+    await interaction.response.send_message(f"No flight logs found for {user.mention}.", ephemeral=True)
+    return
 
-    if not logs:
-        await interaction.response.send_message(f"No flight logs found for {user.mention}.", ephemeral=True)
-        return
+recent_logs = logs[-5:]
+embeds = []
 
+for log in recent_logs:
     embed = discord.Embed(
-        title=f"Flight Logs for {user.name}",
+        title=f"Flight Log - {log['flight_code']}",
+        description=f"Route: {log['route']}\nDuration: {log['duration']} minutes",
         color=discord.Color.blue()
     )
+    if log['notes']:
+        embed.add_field(name="Notes", value=log['notes'], inline=False)
+    embed.set_footer(text=f"ID: {log['id']} • {log['timestamp']}")
+    embeds.append(embed)
 
-    for log in logs:
-        flight_code = log.get("flight_code", "Unknown")
-        timestamp = log.get("timestamp", "Unknown")
-        evidence = log.get("evidence", "No link")
+await interaction.response.send_message(embeds=embeds, ephemeral=True)
+    await interaction.response.send_message(f"Showing flight logs for {user.mention} (demo data).", ephemeral=True)
 
-        embed.add_field(
-            name=f"• **{flight_code}**",
-            value=f"Time: {timestamp}\n[Evidence]({evidence})",
-            inline=False
-        )
-
-    await interaction.response.send_message(embed=embed, ephemeral=True)
-    
 bot.run(DISCORD_TOKEN)
