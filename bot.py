@@ -281,14 +281,15 @@ def get_flight_logs_for_user(user_id: int):
     user_logs = []
     for log in logs:
         if log["user_id"] == user_id:
-            # parse datetime string back to datetime object
             dt = datetime.fromisoformat(log["datetime"])
             user_logs.append({
                 "flight_code": log["flight_code"],
                 "datetime": dt,
                 "evidence_url": log["evidence_url"]
             })
-    return user_logs@bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
+    return user_logs
+
+@bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
 @app_commands.describe(user="User to view logs for")
 async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
     if not has_role(interaction, FLIGHTLOGS_VIEW_ROLE_ID):
@@ -314,6 +315,5 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
     embed.set_footer(text=f"Requested by {interaction.user} • {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}")
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
-
 
 bot.run(DISCORD_TOKEN)
