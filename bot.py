@@ -36,8 +36,6 @@ FLIGHT_LOG_CHANNEL_ID = 1398731789106675923
 FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516  # Your env variable for briefing channel
 
 guild = discord.Object(id=GUILD_ID)
-user_flight_logs = {}  # key: user.id, value: list of flight log dicts
-
 
 @bot.event
 async def on_ready():
@@ -198,18 +196,7 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
     await channel.send(content=interaction.user.mention, embed=embed)
     await interaction.response.send_message("Flight log submitted!", ephemeral=True)
 
-# Store the flight log for the user
-entry = {
-    "flight_code": flight_code,
-    "route": route,
-    "duration": duration,
-    "notes": notes,
-    "id": generate_unique_id(),  # your existing function
-    "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-}
-
-user_logs = user_flight_logs.setdefault(interaction.user.id, [])
-user_logs.append(entry)
+    # Save to database (optional)...
 
 # /infraction command
 @bot.tree.command(name="infraction", description="Log an infraction, demotion, or termination.", guild=guild)
@@ -284,27 +271,9 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-logs = user_flight_logs.get(user.id, [])
-
-if not logs:
-    await interaction.response.send_message(f"No flight logs found for {user.mention}.", ephemeral=True)
-    return
-
-recent_logs = logs[-5:]
-embeds = []
-
-for log in recent_logs:
-    embed = discord.Embed(
-        title=f"Flight Log - {log['flight_code']}",
-        description=f"Route: {log['route']}\nDuration: {log['duration']} minutes",
-        color=discord.Color.blue()
-    )
-    if log['notes']:
-        embed.add_field(name="Notes", value=log['notes'], inline=False)
-    embed.set_footer(text=f"ID: {log['id']} • {log['timestamp']}")
-    embeds.append(embed)
-
-await interaction.response.send_message(embeds=embeds, ephemeral=True)
+    # Example: retrieve from database if you have one
+    # For demo, sending a placeholder
     await interaction.response.send_message(f"Showing flight logs for {user.mention} (demo data).", ephemeral=True)
+
 
 bot.run(DISCORD_TOKEN)
