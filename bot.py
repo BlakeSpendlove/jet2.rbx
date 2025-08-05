@@ -217,6 +217,20 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
         "evidence_url": evidence.url
     })
     save_flight_logs(logs)
+    with open("database.json", "r") as f:
+    data = json.load(f)
+
+log_entry = {
+    "flight_code": flight_code,
+    "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+    "evidence": evidence_url
+}
+
+data.setdefault("flight_logs", {}).setdefault(str(user.id), []).append(log_entry)
+
+with open("database.json", "w") as f:
+    json.dump(data, f, indent=4)
+
 
 # /infraction command
 @bot.tree.command(name="infraction", description="Log an infraction, demotion, or termination.", guild=guild)
