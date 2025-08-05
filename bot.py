@@ -210,7 +210,10 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
 
     # --- Save the flight log ---
 with open("database.json", "r") as f:
-    data = json.load(f)
+    try:
+        data = json.load(f)
+    except json.JSONDecodeError:
+        data = {}
 
 log_entry = {
     "flight_code": flight_code,
@@ -218,7 +221,14 @@ log_entry = {
     "evidence": evidence_url
 }
 
-data.setdefault("flight_logs", {}).setdefault(str(user.id), []).append(log_entry)
+# Ensure nesting under flight_logs
+if "flight_logs" not in data:
+    data["flight_logs"] = {}
+
+if str(user.id) not in data["flight_logs"]:
+    data["flight_logs"][str(user.id)] = []
+
+data["flight_logs"][str(user.id)].append(log_entry)
 
 with open("database.json", "w") as f:
     json.dump(data, f, indent=4)
