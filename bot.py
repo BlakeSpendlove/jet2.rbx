@@ -17,8 +17,8 @@ DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 GUILD_ID = int(os.environ['GUILD_ID'])
 
 # Banner & Thumbnail URLs (hardcoded or from env)
-BANNER_URL = "https://cdn.discordapp.com/attachments/123456789/banner.png"
-THUMBNAIL_URL = "https://cdn.discordapp.com/attachments/123456789/thumbnail.png"
+BANNER_URL = "https://media.discordapp.net/attachments/1395760490982150194/1395769069541789736/Banner1.png?ex=6892b8fe&is=6891677e&hm=e7db83873781b6169784bb54c3526d91446c9b62000335bb725fd47188ced355&=&format=webp&quality=lossless&width=843&height=24"
+THUMBNAIL_URL = "https://media.discordapp.net/attachments/1395760490982150194/1398426011007324220/Jet2_Transparent.png?ex=68928036&is=68912eb6&hm=a45498eba85f03ecd17b520b90d1624088dc5268b098d8759b804c9b2e38f3a4&=&format=webp&quality=lossless&width=1131&height=1295"
 
 # Separate role IDs controlling permissions per command:
 EMBED_ROLE_ID = 1396992153208488057
