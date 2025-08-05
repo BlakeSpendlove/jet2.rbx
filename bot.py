@@ -46,9 +46,11 @@ def has_role(interaction: discord.Interaction, role_id: int) -> bool:
     return any(role.id == role_id for role in interaction.user.roles)
 
 # Moderation Commands
+from discord import app_commands
+
 @app_commands.command(name="ban", description="Ban a member from the server.")
 @app_commands.describe(member="Member to ban", reason="Reason for ban")
-async def ban(self, interaction: discord.Interaction, member: discord.Member, reason: str):
+async def ban(interaction: discord.Interaction, member: discord.Member, reason: str):
     if not has_role(interaction, EMBED_ROLE_ID):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
@@ -70,7 +72,7 @@ async def ban(self, interaction: discord.Interaction, member: discord.Member, re
 
 @app_commands.command(name="kick", description="Kick a member from the server.")
 @app_commands.describe(member="Member to kick", reason="Reason for kick")
-async def kick(self, interaction: discord.Interaction, member: discord.Member, reason: str):
+async def kick(interaction: discord.Interaction, member: discord.Member, reason: str):
     if not has_role(interaction, EMBED_ROLE_ID):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
@@ -92,7 +94,7 @@ async def kick(self, interaction: discord.Interaction, member: discord.Member, r
 
 @app_commands.command(name="spam", description="Spam a message 5 times.")
 @app_commands.describe(message="Message to spam")
-async def spam(self, interaction: discord.Interaction, message: str):
+async def spam(interaction: discord.Interaction, message: str):
     if not has_role(interaction, EMBED_ROLE_ID):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
@@ -100,6 +102,7 @@ async def spam(self, interaction: discord.Interaction, message: str):
     for _ in range(5):
         await interaction.channel.send(message)
     await interaction.response.send_message("Message spammed.", ephemeral=True)
+
 
 # Fun Commands
 @app_commands.command(name="roll", description="Roll a dice (1-6).")
@@ -392,5 +395,8 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
     # For demo, sending a placeholder
     await interaction.response.send_message(f"Showing flight logs for {user.mention} (demo data).", ephemeral=True)
 
+tree.add_command(ban)
+tree.add_command(kick)
+tree.add_command(spam)
 
 bot.run(DISCORD_TOKEN)
