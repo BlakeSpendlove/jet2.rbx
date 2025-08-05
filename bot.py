@@ -321,6 +321,7 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
         color=discord.Color.blue()
     )
     embed.set_footer(text=f"Requested by {interaction.user} • {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}")
+    user_logs = [log for log in logs if log['user_id'] == str(user.id)]
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
