@@ -45,6 +45,123 @@ async def on_ready():
 def has_role(interaction: discord.Interaction, role_id: int) -> bool:
     return any(role.id == role_id for role in interaction.user.roles)
 
+# Moderation Commands
+@app_commands.command(name="ban", description="Ban a member from the server.")
+@app_commands.describe(member="Member to ban", reason="Reason for ban")
+async def ban(self, interaction: discord.Interaction, member: discord.Member, reason: str):
+    if not has_role(interaction, EMBED_ROLE_ID):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+        return
+
+    try:
+        dm_embed = discord.Embed(
+            title="You have been banned",
+            description=f"You were banned from **{interaction.guild.name}**.",
+            color=discord.Color.red()
+        )
+        dm_embed.add_field(name="Reason", value=reason, inline=False)
+        await member.send(embed=dm_embed)
+    except:
+        pass
+
+    await member.ban(reason=reason)
+    await interaction.response.send_message(f"{member.mention} has been banned.", ephemeral=True)
+
+
+@app_commands.command(name="kick", description="Kick a member from the server.")
+@app_commands.describe(member="Member to kick", reason="Reason for kick")
+async def kick(self, interaction: discord.Interaction, member: discord.Member, reason: str):
+    if not has_role(interaction, EMBED_ROLE_ID):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+        return
+
+    try:
+        dm_embed = discord.Embed(
+            title="You have been kicked",
+            description=f"You were kicked from **{interaction.guild.name}**.",
+            color=discord.Color.red()
+        )
+        dm_embed.add_field(name="Reason", value=reason, inline=False)
+        await member.send(embed=dm_embed)
+    except:
+        pass
+
+    await member.kick(reason=reason)
+    await interaction.response.send_message(f"{member.mention} has been kicked.", ephemeral=True)
+
+
+@app_commands.command(name="spam", description="Spam a message 5 times.")
+@app_commands.describe(message="Message to spam")
+async def spam(self, interaction: discord.Interaction, message: str):
+    if not has_role(interaction, EMBED_ROLE_ID):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+        return
+
+    for _ in range(5):
+        await interaction.channel.send(message)
+    await interaction.response.send_message("Message spammed.", ephemeral=True)
+
+# Fun Commands
+@app_commands.command(name="roll", description="Roll a dice (1-6).")
+async def roll(self, interaction: discord.Interaction):
+    result = random.randint(1, 6)
+    embed = discord.Embed(
+        title="🎲 Dice Roll",
+        description=f"You rolled a **{result}**!",
+        color=discord.Color.dark_red()
+    )
+    footer_text, _ = generate_footer()
+    embed.set_footer(text=footer_text)
+    await interaction.response.send_message(embed=embed)
+
+
+@app_commands.command(name="coinflip", description="Flip a coin.")
+async def coinflip(self, interaction: discord.Interaction):
+    result = random.choice(["Heads", "Tails"])
+    embed = discord.Embed(
+        title="🪙 Coin Flip",
+        description=f"You got **{result}**!",
+        color=discord.Color.dark_red()
+    )
+    footer_text, _ = generate_footer()
+    embed.set_footer(text=footer_text)
+    await interaction.response.send_message(embed=embed)
+
+
+@app_commands.command(name="8ball", description="Ask the Magic 8-ball a question.")
+@app_commands.describe(question="Your question for the 8-ball")
+async def eightball(self, interaction: discord.Interaction, question: str):
+    responses = [
+        "It is certain.", "Yes definitely.", "Most likely.", "Ask again later.",
+        "Cannot predict now.", "Don’t count on it.", "My sources say no.", "Very doubtful."
+    ]
+    result = random.choice(responses)
+    embed = discord.Embed(
+        title="🎱 Magic 8-Ball",
+        description=f"**Question:** {question}\n**Answer:** {result}",
+        color=discord.Color.dark_red()
+    )
+    footer_text, _ = generate_footer()
+    embed.set_footer(text=footer_text)
+    await interaction.response.send_message(embed=embed)
+
+
+@app_commands.command(name="joke", description="Get a random joke.")
+async def joke(self, interaction: discord.Interaction):
+    jokes = [
+        "Why don't pilots ever get lost? Because they always follow their flight plan!",
+        "What do you call it when a flight attendant gets fired? A job departure.",
+        "Why did the airplane break up with the helicopter? It felt like it was going in circles."
+    ]
+    embed = discord.Embed(
+        title="😂 Here's a joke",
+        description=random.choice(jokes),
+        color=discord.Color.dark_red()
+    )
+    footer_text, _ = generate_footer()
+    embed.set_footer(text=footer_text)
+    await interaction.response.send_message(embed=embed)
+
 # /embed command
 @bot.tree.command(name="embed", description="Send a custom embed.", guild=guild)
 @app_commands.describe(embed_json="Embed JSON content")
