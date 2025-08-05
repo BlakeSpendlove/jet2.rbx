@@ -257,7 +257,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         description=(
             f"**🎖️ Jet2.com | Promotion Notice**\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"**👤 Staff Member:** {user.mention}\n"
+            f"**👤 Staff Member:** {interaction.user.mention}\n"  # fixed here
             f"**⬆️ New Rank:** {promotion_to}\n"
             f"**📝 Reason for Promotion:**\n{reason}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -271,7 +271,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=footer_text)
 
-    channel = bot.get_channel(PROMOTION_CHANNEL_ID)
+    channel = interaction.client.get_channel(PROMOTION_CHANNEL_ID)
     await channel.send(content=user.mention, embed=embed)
     await interaction.response.send_message("Promotion logged.", ephemeral=True)
 
