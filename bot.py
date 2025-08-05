@@ -28,7 +28,6 @@ INFRACTION_ROLE_ID = 1396992201636057149
 PROMOTION_ROLE_ID = 1396992201636057149
 FLIGHTLOGS_VIEW_ROLE_ID = 1395904999279820831  # for /flightlogs_view
 FLIGHT_BRIEFING_ROLE_ID = 1397864367680127048  # Add this to your env vars
-WHITELIST_ROLE_ID = 1396992153208488057
 
 # Separate channel IDs for commands that send to specific channels:
 INFRACTION_CHANNEL_ID = 1398731768449994793
@@ -47,31 +46,73 @@ def has_role(interaction: discord.Interaction, role_id: int) -> bool:
     return any(role.id == role_id for role in interaction.user.roles)
 
 # Moderation Commands
-@app_commands.command(name="ban", description="Ban a member from the server.")
-@app_commands.checks.has_role(int(os.getenv("WHITELIST_ROLE_ID")))
-async def ban(interaction, member: discord.Member, reason: str):
-    await member.ban(reason=reason)
-    await member.send(f"You have been **banned** from {interaction.guild.name}.\nReason: {reason}")
-    await interaction.response.send_message(f"✅ {member.mention} has been banned.", ephemeral=True)
+from discord import app_commands, Interaction, Member
+from discord.ext import commands
+import discord
 
-@app_commands.command(name="kick", description="Kick a member from the server.")
-@app_commands.checks.has_role(int(os.getenv("WHITELIST_ROLE_ID")))
-async def kick(interaction, member: discord.Member, reason: str):
-    await member.kick(reason=reason)
-    await member.send(f"You have been **kicked** from {interaction.guild.name}.\nReason: {reason}")
-    await interaction.response.send_message(f"✅ {member.mention} has been kicked.", ephemeral=True)
+EMBED_ROLE_ID = 123456789012345678  # Replace with your whitelisted role ID
+
+class Moderation(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @app_commands.command(name="ban", description="Ban a member from the server.")
+    async def ban(self, interaction: Interaction, user: Member, reason: str):
+        if EMBED_ROLE_ID not in [role.id for role in interaction.user.roles]:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+
+        try:
+            await user.send(f"You have been **banned** from **{interaction.guild.name}** for: {reason}")
+        except:
+            pass  # User DMs closed
+
+        await interaction.guild.ban(user, reason=reason)
+        await interaction.response.send_message(f"✅ {user.mention} has been banned for: `{reason}`", ephemeral=True)
+
+    @app_commands.command(name="kick", description="Kick a member from the server.")
+    async def kick(self, interaction: Interaction, user: Member, reason: str):
+        if EMBED_ROLE_ID not in [role.id for role in interaction.user.roles]:
+            await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+            return
+
+        try:
+            await user.send(f"You have been **kicked** from **{interaction.guild.name}** for: {reason}")
+        except:
+            pass
+
+        await interaction.guild.kick(user, reason=reason)
+        await interaction.response.send_message(f"✅ {user.mention} has been kicked for: `{reason}`", ephemeral=True)
+
+async def setup(bot):
+    await bot.add_cog(Moderation(bot))
 
 # --- FUN COMMANDS (Public Access) ---
 
-@app_commands.command(name="roll", description="Roll a dice (1-6).")
-async def roll(interaction):
-    number = random.randint(1, 6)
-    await interaction.response.send_message(f"🎲 You rolled a **{number}**!")
+from discord import app_commands, Interaction
+from discord.ext import commands
+import random
 
-@app_commands.command(name="say", description="Make the bot say something.")
-@app_commands.describe(text="The message to repeat.")
-async def say(interaction, text: str):
-    await interaction.response.send_message(text)
+class Fun(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @app_commands.command(name="roll", description="Roll a dice (1-6).")
+    async def roll(self, interaction: Interaction):
+        result = random.randint(1, 6)
+        await interaction.response.send_message(f"🎲 You rolled a **{result}**!")
+
+    @app_commands.command(name="spam", description="Spam a funny message.")
+    @app_commands.describe(text="The text to spam (will be repeated 5 times)")
+    async def spam(self, interaction: Interaction, text: str):
+        if len(text) > 100:
+            await interaction.response.send_message("❌ Text too long.", ephemeral=True)
+            return
+        spammed = "\n".join([f"{text}" for _ in range(5)])
+        await interaction.response.send_message(spammed)
+
+async def setup(bot):
+    await bot.add_cog(Fun(bot))
 
 # /embed command
 @bot.tree.command(name="embed", description="Send a custom embed.", guild=guild)
