@@ -16,24 +16,21 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 GUILD_ID = int(os.environ['GUILD_ID'])
 
-# Banner & Thumbnail URLs (hardcoded or from env)
 BANNER_URL = "https://media.discordapp.net/attachments/1395760490982150194/1395769069541789736/Banner1.png?ex=6892b8fe&is=6891677e&hm=e7db83873781b6169784bb54c3526d91446c9b62000335bb725fd47188ced355&=&format=webp&quality=lossless&width=843&height=24"
 THUMBNAIL_URL = "https://media.discordapp.net/attachments/1395760490982150194/1398426011007324220/Jet2_Transparent.png?ex=68928036&is=68912eb6&hm=a45498eba85f03ecd17b520b90d1624088dc5268b098d8759b804c9b2e38f3a4&=&format=webp&quality=lossless&width=1131&height=1295"
 
-# Separate role IDs controlling permissions per command:
 EMBED_ROLE_ID = 1396992153208488057
 APP_RESULTS_ROLE_ID = 1396992153208488057
 FLIGHT_LOG_ROLE_ID = 1395904999279820831
 INFRACTION_ROLE_ID = 1396992201636057149
 PROMOTION_ROLE_ID = 1396992201636057149
-FLIGHTLOGS_VIEW_ROLE_ID = 1395904999279820831  # for /flightlogs_view
-FLIGHT_BRIEFING_ROLE_ID = 1397864367680127048  # Add this to your env vars
+FLIGHTLOGS_VIEW_ROLE_ID = 1395904999279820831
+FLIGHT_BRIEFING_ROLE_ID = 1397864367680127048
 
-# Separate channel IDs for commands that send to specific channels:
 INFRACTION_CHANNEL_ID = 1398731768449994793
 PROMOTION_CHANNEL_ID = 1398731752197066953
 FLIGHT_LOG_CHANNEL_ID = 1398731789106675923
-FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516  # Your env variable for briefing channel
+FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516
 
 guild = discord.Object(id=GUILD_ID)
 
@@ -45,7 +42,7 @@ async def on_ready():
 def has_role(interaction: discord.Interaction, role_id: int) -> bool:
     return any(role.id == role_id for role in interaction.user.roles)
 
-# /embed command
+# Embed command with set_author added
 @bot.tree.command(name="embed", description="Send a custom embed.", guild=guild)
 @app_commands.describe(embed_json="Embed JSON content")
 async def embed(interaction: discord.Interaction, embed_json: str):
@@ -64,23 +61,20 @@ async def embed(interaction: discord.Interaction, embed_json: str):
         return
 
     embed_data = data["embeds"][0]
-
-    # Validate required fields in the embed object
     if not any(k in embed_data for k in ("description", "title", "fields")):
-        await interaction.response.send_message(
-            "Embed JSON must have at least a description, title, or fields.", ephemeral=True
-        )
+        await interaction.response.send_message("Embed JSON must have at least a description, title, or fields.", ephemeral=True)
         return
 
     embed = discord.Embed.from_dict(embed_data)
     embed.set_image(url=BANNER_URL)
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     footer_text, _ = generate_footer()
     embed.set_footer(text=footer_text)
 
     await interaction.channel.send(embed=embed)
     await interaction.response.send_message("Embed sent!", ephemeral=True)
 
-# /app_results command
+# Application result command
 @bot.tree.command(name="app_results", description="Send application result to user.", guild=guild)
 @app_commands.describe(user="User to DM", result="Pass or Fail", reason="Reason for result")
 async def app_results(interaction: discord.Interaction, user: discord.User, result: str, reason: str):
@@ -90,14 +84,10 @@ async def app_results(interaction: discord.Interaction, user: discord.User, resu
 
     footer_text, _ = generate_footer()
     color = 0x00FF00 if result.lower() == "pass" else 0xFF0000
-    
+
     embed = discord.Embed(
         title="Jet2.com | Application Result",
         description=(
-            embed.set_author(,
-    name=str(interaction.user),
-    icon_url=interaction.user.display_avatar.url
-)
             f"Hello {user.mention},\n\n"
             f"Thank you for applying to Jet2.com. Your application has been reviewed.\n\n"
             f"**Result:** {result.capitalize()}\n"
@@ -110,6 +100,7 @@ async def app_results(interaction: discord.Interaction, user: discord.User, resu
     )
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_image(url=BANNER_URL)
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_footer(text=footer_text)
 
     try:
@@ -118,22 +109,14 @@ async def app_results(interaction: discord.Interaction, user: discord.User, resu
     except Exception:
         await interaction.response.send_message(f"Failed to send DM to {user.mention}.", ephemeral=True)
 
-# /flight_briefing command
-@bot.tree.command(name="flight_briefing", description="Send a flight briefing with game and VC links.", guild=guild)
-@app_commands.describe(
-    flight_code="Flight code",
-    game_link="Link to the flight simulation game",
-    vc_link="Link to voice chat"
-)
+# Flight briefing command
+@bot.tree.command(name="flight_briefing", description="Send a flight briefing.", guild=guild)
+@app_commands.describe(flight_code="Flight code", game_link="Link to the flight simulation game", vc_link="Link to voice chat")
 async def flight_briefing(interaction: discord.Interaction, flight_code: str, game_link: str, vc_link: str):
     if not has_role(interaction, FLIGHT_BRIEFING_ROLE_ID):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    channel = interaction.client.get_channel(FLIGHT_BRIEFING_CHANNEL_ID)
-    if not channel:
-        await interaction.response.send_message("Flight briefing channel not found.", ephemeral=True)
-        return
     if interaction.channel.id != FLIGHT_BRIEFING_CHANNEL_ID:
         await interaction.response.send_message(f"This command can only be used in <#{FLIGHT_BRIEFING_CHANNEL_ID}>.", ephemeral=True)
         return
@@ -141,26 +124,23 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
     footer_text, _ = generate_footer()
 
     embed = discord.Embed(
-        embed.set_author(
-    name=str(interaction.user),
-    icon_url=interaction.user.display_avatar.url
-)
         title=f"Jet2.com | Flight Briefing — {flight_code}",
         description=(
             f"@everyone\n\n"
             f"✈️ **Flight Code:** {flight_code}\n"
             f"👤 **Host:** {interaction.user.mention}\n\n"
-            "Welcome to your flight briefing.\n\n"
-            "Please review all details carefully and join the links below at the scheduled time.\n\n"
+            f"Welcome to your flight briefing.\n\n"
+            f"Please review all details carefully and join the links below at the scheduled time.\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"**Game Link:** [Click Here]({game_link})  \n"
             f"**Voice Chat:** [Join Here]({vc_link})\n\n"
-            "━━━━━━━━━━━━━━━━━━━━\n\n"
-            "Friendly low fares. Friendly people."
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"Friendly low fares. Friendly people."
         ),
         color=10364968
     )
     embed.set_image(url=BANNER_URL)
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_footer(text=footer_text)
 
     class BriefingView(discord.ui.View):
@@ -169,7 +149,7 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
             self.add_item(discord.ui.Button(label="Game Link", url=game_link))
             self.add_item(discord.ui.Button(label="Voice Chat", url=vc_link))
 
-    await channel.send(content="@everyone", embed=embed, view=BriefingView())
+    await interaction.channel.send(embed=embed, view=BriefingView())
     await interaction.response.send_message("Flight briefing sent!", ephemeral=True)
 
 # /flight_log command
@@ -182,12 +162,9 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
 
     footer_text, log_id = generate_footer()
 
-embed.set_author(
-    name=str(interaction.user),
-    icon_url=interaction.user.display_avatar.url
-)
+    embed = discord.Embed(
+        title="Jet2.com | Flight Log Submitted",
         description=(
-            f"**🛬 Jet2.com | Flight Log Submitted**\n\n"
             f"**👤 Staff Member:** {interaction.user.mention}  \n"
             f"**🛫 Flight Code:** {flight_code}\n"
             f"**📎 Evidence:** [View Attachment]({evidence.url})\n\n"
@@ -198,7 +175,7 @@ embed.set_author(
         ),
         color=10364968
     )
-    embed.set_author(name="Jet2.com Flight Log")
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=BANNER_URL)
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=footer_text)
@@ -206,8 +183,6 @@ embed.set_author(
     channel = bot.get_channel(FLIGHT_LOG_CHANNEL_ID)
     await channel.send(content=interaction.user.mention, embed=embed)
     await interaction.response.send_message("Flight log submitted!", ephemeral=True)
-
-    # Save to database (optional)...
 
 # /infraction command
 @bot.tree.command(name="infraction", description="Log an infraction, demotion, or termination.", guild=guild)
@@ -220,13 +195,8 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
     footer_text, inf_id = generate_footer()
 
     embed = discord.Embed(
+        title="Jet2.com | Infraction Notice",
         description=(
-            embed.set_author(
-    name=str(interaction.user),
-    icon_url=interaction.user.display_avatar.url
-)
-            f"**⚠️ Jet2.com | Infraction Notice**\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"**👤 User:** {user.mention}\n"
             f"**📄 Infraction:** {type}\n"
             f"**📝 Reason:** {reason}\n\n"
@@ -237,7 +207,7 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
         ),
         color=10364968
     )
-    embed.set_author(name="Jet2.com Infraction")
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=BANNER_URL)
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=footer_text)
@@ -256,15 +226,9 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
 
     footer_text, _ = generate_footer()
 
-    icon_url=interaction.user.display_avatar.url
-)
+    embed = discord.Embed(
+        title="Jet2.com | Promotion Notice",
         description=(
-            embed.set_author(
-    name=str(interaction.user),
-    icon_url=interaction.user.display_avatar.url
-)
-            f"**🎖️ Jet2.com | Promotion Notice**\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"**👤 Staff Member:** {user.mention}\n"
             f"**⬆️ New Rank:** {promotion_to}\n"
             f"**📝 Reason for Promotion:**\n{reason}\n\n"
@@ -274,7 +238,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         ),
         color=10364968
     )
-    embed.set_author(name="Jet2.com Promotion")
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=BANNER_URL)
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=footer_text)
@@ -291,9 +255,7 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    # Example: retrieve from database if you have one
-    # For demo, sending a placeholder
+    # Placeholder for real data from DB
     await interaction.response.send_message(f"Showing flight logs for {user.mention} (demo data).", ephemeral=True)
-
 
 bot.run(DISCORD_TOKEN)
