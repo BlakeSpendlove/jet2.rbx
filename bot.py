@@ -1,12 +1,10 @@
-import discord
-from discord import app_commands
-from discord.ext import commands
 import os
-import random
-import string
-import datetime
 import json
-from pathlib import Path  # ✅ THIS LINE FIXES THE ERROR
+from datetime import datetime
+import discord
+from discord.ext import commands
+from discord import app_commands
+from utils import generate_footer
 
 intents = discord.Intents.default()
 intents.message_content = False
@@ -28,7 +26,6 @@ INFRACTION_ROLE_ID = 1396992201636057149
 PROMOTION_ROLE_ID = 1396992201636057149
 FLIGHTLOGS_VIEW_ROLE_ID = 1395904999279820831
 FLIGHT_BRIEFING_ROLE_ID = 1397864367680127048
-FLIGHTLOGS_VIEW_ROLE_ID = 1395904999279820831
 
 INFRACTION_CHANNEL_ID = 1398731768449994793
 PROMOTION_CHANNEL_ID = 1398731752197066953
@@ -37,11 +34,6 @@ FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516
 
 guild = discord.Object(id=GUILD_ID)
 
-DB_PATH = Path("database.json")
-if not DB_PATH.exists():
-    with DB_PATH.open("w") as f:
-        json.dump({"flight_logs": {}}, f)
-        
 @bot.event
 async def on_ready():
     await bot.tree.sync(guild=guild)
@@ -192,18 +184,6 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
     await channel.send(content=interaction.user.mention, embed=embed)
     await interaction.response.send_message("Flight log submitted!", ephemeral=True)
 
-    db = load_database()
-    user_id = str(interaction.user.id)
-    if user_id not in db["flight_logs"]:
-        db["flight_logs"][user_id] = []
-    db["flight_logs"][user_id].append({
-        "flight_code": flight_code,
-        "evidence_url": evidence.url,
-        "log_id": log_id,
-        "timestamp": datetime.datetime.now().isoformat()
-    })
-    save_database(db)
-
 # /infraction command
 @bot.tree.command(name="infraction", description="Log an infraction, demotion, or termination.", guild=guild)
 @app_commands.describe(user="User", type="Infraction type", reason="Reason")
@@ -275,29 +255,7 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    db = load_database()
-    user_id = str(user.id)
-    logs = db["flight_logs"].get(user_id)
-
-    if not logs:
-        await interaction.response.send_message(f"No flight logs found for {user.mention}.", ephemeral=True)
-        return
-
-    embed = discord.Embed(
-        title=f"Flight Logs for {user.display_name}",
-        color=10364968
-    )
-    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-
-    for log in logs[-5:]:  # Show up to last 5 logs
-        timestamp = datetime.datetime.fromisoformat(log["timestamp"]).strftime("%d/%m/%Y %H:%M")
-        embed.add_field(
-            name=f"{log['flight_code']} — {timestamp}",
-            value=f"[Evidence]({log['evidence_url']}) | Log ID: `{log['log_id']}`",
-            inline=False
-        )
-
-    embed.set_footer(text=f"Total Logs: {len(logs)}")
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    # Placeholder for real data from DB
+    await interaction.response.send_message(f"Showing flight logs for {user.mention} (demo data).", ephemeral=True)
 
 bot.run(DISCORD_TOKEN)
