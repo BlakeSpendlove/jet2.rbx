@@ -94,7 +94,7 @@ async def app_results(interaction: discord.Interaction, user: discord.User, resu
     embed = discord.Embed(
         title="Jet2.com | Application Result",
         description=(
-            embed.set_author(
+            embed.set_author(,
     name=str(interaction.user),
     icon_url=interaction.user.display_avatar.url
 )
