@@ -35,6 +35,11 @@ FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516
 
 guild = discord.Object(id=GUILD_ID)
 
+DB_PATH = Path("database.json")
+if not DB_PATH.exists():
+    with DB_PATH.open("w") as f:
+        json.dump({"flight_logs": {}}, f)
+        
 @bot.event
 async def on_ready():
     await bot.tree.sync(guild=guild)
