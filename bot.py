@@ -1,10 +1,12 @@
-import os
-import json
-from datetime import datetime
 import discord
-from discord.ext import commands
 from discord import app_commands
-from utils import generate_footer
+from discord.ext import commands
+import os
+import random
+import string
+import datetime
+import json
+from pathlib import Path  # ✅ THIS LINE FIXES THE ERROR
 
 intents = discord.Intents.default()
 intents.message_content = False
