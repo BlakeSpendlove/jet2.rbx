@@ -26,6 +26,7 @@ INFRACTION_ROLE_ID = 1396992201636057149
 PROMOTION_ROLE_ID = 1396992201636057149
 FLIGHTLOGS_VIEW_ROLE_ID = 1395904999279820831
 FLIGHT_BRIEFING_ROLE_ID = 1397864367680127048
+FLIGHTLOGS_VIEW_ROLE_ID = 1395904999279820831
 
 INFRACTION_CHANNEL_ID = 1398731768449994793
 PROMOTION_CHANNEL_ID = 1398731752197066953
@@ -255,7 +256,9 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    # Placeholder for real data from DB
-    await interaction.response.send_message(f"Showing flight logs for {user.mention} (demo data).", ephemeral=True)
+    await interaction.response.send_message(
+        f"Showing flight logs for {user.mention} (demo data).\n\nTo log a flight for this user, use `/flight_log flight_code:<code> evidence:<attachment>`.",
+        ephemeral=True
+    )
 
 bot.run(DISCORD_TOKEN)
