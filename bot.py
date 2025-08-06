@@ -190,6 +190,18 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
     await channel.send(content=interaction.user.mention, embed=embed)
     await interaction.response.send_message("Flight log submitted!", ephemeral=True)
 
+    db = load_database()
+    user_id = str(interaction.user.id)
+    if user_id not in db["flight_logs"]:
+        db["flight_logs"][user_id] = []
+    db["flight_logs"][user_id].append({
+        "flight_code": flight_code,
+        "evidence_url": evidence.url,
+        "log_id": log_id,
+        "timestamp": datetime.datetime.now().isoformat()
+    })
+    save_database(db)
+
 # /infraction command
 @bot.tree.command(name="infraction", description="Log an infraction, demotion, or termination.", guild=guild)
 @app_commands.describe(user="User", type="Infraction type", reason="Reason")
@@ -261,9 +273,29 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    await interaction.response.send_message(
-        f"Showing flight logs for {user.mention} (demo data).\n\nTo log a flight for this user, use `/flight_log flight_code:<code> evidence:<attachment>`.",
-        ephemeral=True
+    db = load_database()
+    user_id = str(user.id)
+    logs = db["flight_logs"].get(user_id)
+
+    if not logs:
+        await interaction.response.send_message(f"No flight logs found for {user.mention}.", ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title=f"Flight Logs for {user.display_name}",
+        color=10364968
     )
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+
+    for log in logs[-5:]:  # Show up to last 5 logs
+        timestamp = datetime.datetime.fromisoformat(log["timestamp"]).strftime("%d/%m/%Y %H:%M")
+        embed.add_field(
+            name=f"{log['flight_code']} — {timestamp}",
+            value=f"[Evidence]({log['evidence_url']}) | Log ID: `{log['log_id']}`",
+            inline=False
+        )
+
+    embed.set_footer(text=f"Total Logs: {len(logs)}")
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 bot.run(DISCORD_TOKEN)
