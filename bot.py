@@ -90,13 +90,14 @@ async def app_results(interaction: discord.Interaction, user: discord.User, resu
 
     footer_text, _ = generate_footer()
     color = 0x00FF00 if result.lower() == "pass" else 0xFF0000
-
-   embed.set_author(
-    name=str(interaction.user),  # e.g., progamerzzzz#8447
-    icon_url=interaction.user.display_avatar.url
+    
     embed = discord.Embed(
         title="Jet2.com | Application Result",
         description=(
+            embed.set_author(
+    name=str(interaction.user),
+    icon_url=interaction.user.display_avatar.url
+)
             f"Hello {user.mention},\n\n"
             f"Thank you for applying to Jet2.com. Your application has been reviewed.\n\n"
             f"**Result:** {result.capitalize()}\n"
@@ -141,7 +142,7 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
 
     embed = discord.Embed(
         embed.set_author(
-    name=str(interaction.user),  # e.g., progamerzzzz#8447
+    name=str(interaction.user),
     icon_url=interaction.user.display_avatar.url
 )
         title=f"Jet2.com | Flight Briefing — {flight_code}",
@@ -181,9 +182,8 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
 
     footer_text, log_id = generate_footer()
 
-    embed = discord.Embed(
-        embed.set_author(
-    name=str(interaction.user),  # e.g., progamerzzzz#8447
+embed.set_author(
+    name=str(interaction.user),
     icon_url=interaction.user.display_avatar.url
 )
         description=(
@@ -220,11 +220,11 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
     footer_text, inf_id = generate_footer()
 
     embed = discord.Embed(
-        embed.set_author(
-    name=str(interaction.user),  # e.g., progamerzzzz#8447
+        description=(
+            embed.set_author(
+    name=str(interaction.user),
     icon_url=interaction.user.display_avatar.url
 )
-        description=(
             f"**⚠️ Jet2.com | Infraction Notice**\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"**👤 User:** {user.mention}\n"
@@ -256,12 +256,13 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
 
     footer_text, _ = generate_footer()
 
-    embed = discord.Embed(
-        embed.set_author(
-    name=str(interaction.user),  # e.g., progamerzzzz#8447
     icon_url=interaction.user.display_avatar.url
 )
         description=(
+            embed.set_author(
+    name=str(interaction.user),
+    icon_url=interaction.user.display_avatar.url
+)
             f"**🎖️ Jet2.com | Promotion Notice**\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"**👤 Staff Member:** {user.mention}\n"
