@@ -91,6 +91,9 @@ async def app_results(interaction: discord.Interaction, user: discord.User, resu
     footer_text, _ = generate_footer()
     color = 0x00FF00 if result.lower() == "pass" else 0xFF0000
 
+   embed.set_author(
+    name=str(interaction.user),  # e.g., progamerzzzz#8447
+    icon_url=interaction.user.display_avatar.url
     embed = discord.Embed(
         title="Jet2.com | Application Result",
         description=(
@@ -137,6 +140,10 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
     footer_text, _ = generate_footer()
 
     embed = discord.Embed(
+        embed.set_author(
+    name=str(interaction.user),  # e.g., progamerzzzz#8447
+    icon_url=interaction.user.display_avatar.url
+)
         title=f"Jet2.com | Flight Briefing — {flight_code}",
         description=(
             f"@everyone\n\n"
@@ -175,6 +182,10 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
     footer_text, log_id = generate_footer()
 
     embed = discord.Embed(
+        embed.set_author(
+    name=str(interaction.user),  # e.g., progamerzzzz#8447
+    icon_url=interaction.user.display_avatar.url
+)
         description=(
             f"**🛬 Jet2.com | Flight Log Submitted**\n\n"
             f"**👤 Staff Member:** {interaction.user.mention}  \n"
@@ -209,6 +220,10 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
     footer_text, inf_id = generate_footer()
 
     embed = discord.Embed(
+        embed.set_author(
+    name=str(interaction.user),  # e.g., progamerzzzz#8447
+    icon_url=interaction.user.display_avatar.url
+)
         description=(
             f"**⚠️ Jet2.com | Infraction Notice**\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
@@ -242,6 +257,10 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     footer_text, _ = generate_footer()
 
     embed = discord.Embed(
+        embed.set_author(
+    name=str(interaction.user),  # e.g., progamerzzzz#8447
+    icon_url=interaction.user.display_avatar.url
+)
         description=(
             f"**🎖️ Jet2.com | Promotion Notice**\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
