@@ -123,6 +123,8 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
 
     footer_text, _ = generate_footer()
 
+    await interaction.channel.send("@everyone")
+    
     embed = discord.Embed(
         title=f"Jet2.com | Flight Briefing — {flight_code}",
         description=(
