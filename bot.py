@@ -168,8 +168,7 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
         title="Jet2.com | Flight Log Submitted",
         description=(
             f"**👤 Staff Member:** {interaction.user.mention}  \n"
-            f"**🛫 Flight Code:** {flight_code}\n"
-            f"**📎 Evidence:** [View Attachment]({evidence.url})\n\n"
+            f"**🛫 Flight Code:** {flight_code}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"Your flight has been successfully logged and submitted to our records system.\n"
             f"Please do not delete your evidence.\n\n"
@@ -178,7 +177,7 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
         color=10364968
     )
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-    embed.set_image(url=BANNER_URL)
+    embed.set_image(url=evidence.url)  # Show the uploaded image
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=footer_text)
 
