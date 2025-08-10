@@ -86,7 +86,7 @@ async def app_results(interaction: discord.Interaction, user: discord.User, resu
     color = 0x00FF00 if result.lower() == "pass" else 0xFF0000
 
     embed = discord.Embed(
-        title="Jet2.com | Application Result",
+        title="Jet2.rbx | Application Result",
         description=(
             f"Hello {user.mention},\n\n"
             f"Thank you for applying to Jet2.com. Your application has been reviewed.\n\n"
@@ -94,7 +94,7 @@ async def app_results(interaction: discord.Interaction, user: discord.User, resu
             f"**Reason:** {reason}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"If you have any questions, please contact a member of management.\n\n"
-            f"✈️ Jet2.com — Friendly low fares. Friendly people."
+            f"✈️ Jet2.rbx — Friendly low fares. Friendly people."
         ),
         color=color
     )
@@ -126,7 +126,7 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
     await interaction.channel.send("@everyone")
     
     embed = discord.Embed(
-        title=f"Jet2.com | Flight Briefing — {flight_code}",
+        title=f"Jet2.rbx | Flight Briefing — {flight_code}",
         description=(
             f"@everyone\n\n"
             f"✈️ **Flight Code:** {flight_code}\n"
@@ -165,7 +165,7 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
     footer_text, log_id = generate_footer()
 
     embed = discord.Embed(
-        title="Jet2.com | Flight Log Submitted",
+        title="Jet2.rbx | Flight Log Submitted",
         description=(
             f"**👤 Staff Member:** {interaction.user.mention}  \n"
             f"**🛫 Flight Code:** {flight_code}\n\n"
@@ -196,7 +196,7 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
     footer_text, inf_id = generate_footer()
 
     embed = discord.Embed(
-        title="Jet2.com | Infraction Notice",
+        title="Jet2.rbx | Infraction Notice",
         description=(
             f"**👤 User:** {user.mention}\n"
             f"**📄 Infraction:** {type}\n"
@@ -204,7 +204,7 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"Please acknowledge this notice and take appropriate steps.\n"
             f"Repeated infractions may lead to more severe consequences.\n\n"
-            f"✈️ Jet2.com — Friendly low fares. Friendly people."
+            f"✈️ Jet2.rbx — Friendly low fares. Friendly people."
         ),
         color=10364968
     )
@@ -228,14 +228,14 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     footer_text, _ = generate_footer()
 
     embed = discord.Embed(
-        title="Jet2.com | Promotion Notice",
+        title="Jet2.rbx | Promotion Notice",
         description=(
             f"**👤 Staff Member:** {user.mention}\n"
             f"**⬆️ New Rank:** {promotion_to}\n"
             f"**📝 Reason for Promotion:**\n{reason}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"Please join us in congratulating them.\n\n"
-            f"✈️ Jet2.com — Friendly low fares. Friendly people."
+            f"✈️ Jet2.rbx — Friendly low fares. Friendly people."
         ),
         color=10364968
     )
