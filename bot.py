@@ -26,6 +26,8 @@ INFRACTION_ROLE_ID = 1396992201636057149
 PROMOTION_ROLE_ID = 1396992201636057149
 FLIGHTLOGS_VIEW_ROLE_ID = 1395904999279820831
 FLIGHT_BRIEFING_ROLE_ID = 1397864367680127048
+LOA_APPROVER_ROLE_ID = 1396992153208488057
+LOA_ROLE_ID = 1404543704651534517
 
 INFRACTION_CHANNEL_ID = 1398731768449994793
 PROMOTION_CHANNEL_ID = 1398731752197066953
@@ -247,6 +249,90 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     channel = bot.get_channel(PROMOTION_CHANNEL_ID)
     await channel.send(content=user.mention, embed=embed)
     await interaction.response.send_message("Promotion logged.", ephemeral=True)
+
+@bot.tree.command(name="loa_request", description="Request a leave of absence.", guild=guild)
+@app_commands.describe(user="User requesting LOA", date_from="Start date (YYYY-MM-DD)", date_to="End date (YYYY-MM-DD)", reason="Reason for LOA")
+async def loa_request(interaction: discord.Interaction, user: discord.User, date_from: str, date_to: str, reason: str):
+    # Create footer
+    footer_text, _ = generate_footer()
+
+    embed = discord.Embed(
+        title="RYR RBX | Leave of Absence Request",
+        description=(
+            f"**👤 Requested By:** {interaction.user.mention}\n"
+            f"**🙍 User:** {user.mention}\n"
+            f"**📅 Dates:** {date_from} ➝ {date_to}\n"
+            f"**📝 Reason:** {reason}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"This request requires management approval."
+        ),
+        color=0x193E75
+    )
+    embed.set_thumbnail(url=THUMBNAIL_URL)
+    embed.set_image(url=BANNER_URL)
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    embed.set_footer(text=footer_text)
+
+    class LOAView(ui.View):
+        def __init__(self):
+            super().__init__(timeout=None)
+
+        async def interaction_check(self, button_inter: discord.Interaction) -> bool:
+            # Only allow users with the approver role
+            if not any(role.id == LOA_APPROVER_ROLE_ID for role in button_inter.user.roles):
+                await button_inter.response.send_message("You do not have permission to approve/deny LOAs.", ephemeral=True)
+                return False
+            return True
+
+        @ui.button(label="✅ Approve", style=discord.ButtonStyle.green)
+        async def approve(self, button_inter: discord.Interaction, button: ui.Button):
+            guild_obj = interaction.guild
+            role = guild_obj.get_role(LOA_ROLE_ID)
+
+            await user.add_roles(role)
+            await user.send(
+                embed=discord.Embed(
+                    title="RYR RBX | LOA Approved",
+                    description=f"Hello {user.mention},\n\nYour LOA from **{date_from}** to **{date_to}** has been **approved**.\n\nEnjoy your time off!",
+                    color=0x193E75
+                ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
+            )
+
+            await button_inter.response.send_message(f"LOA approved for {user.mention}.", ephemeral=True)
+
+            # Schedule removal of role at date_to
+            try:
+                end_date = datetime.strptime(date_to, "%Y-%m-%d")
+                now = datetime.utcnow()
+                delay = (end_date - now).total_seconds()
+                if delay > 0:
+                    async def remove_later():
+                        await asyncio.sleep(delay)
+                        await user.remove_roles(role)
+                        await user.send(
+                            embed=discord.Embed(
+                                title="RYR RBX | Welcome Back",
+                                description=f"Welcome back {user.mention}!\n\nYour LOA has ended. We’re glad to see you again!",
+                                color=0x193E75
+                            ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
+                        )
+                    asyncio.create_task(remove_later())
+            except Exception as e:
+                print(f"Failed to schedule LOA removal: {e}")
+
+        @ui.button(label="❌ Deny", style=discord.ButtonStyle.red)
+        async def deny(self, button_inter: discord.Interaction, button: ui.Button):
+            await user.send(
+                embed=discord.Embed(
+                    title="RYR RBX | LOA Denied",
+                    description=f"Hello {user.mention},\n\nUnfortunately, your LOA request from **{date_from}** to **{date_to}** has been **denied**.",
+                    color=0xFF0000
+                ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
+            )
+            await button_inter.response.send_message(f"LOA denied for {user.mention}.", ephemeral=True)
+
+    await interaction.channel.send(embed=embed, view=LOAView())
+    await interaction.response.send_message("LOA request submitted.", ephemeral=True)
 
 # /flightlogs_view command
 @bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
