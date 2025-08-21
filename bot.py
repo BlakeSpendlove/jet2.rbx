@@ -16,7 +16,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 GUILD_ID = int(os.environ['GUILD_ID'])
 
-BANNER_URL = "https://media.discordapp.net/attachments/1395760490982150194/1408127523904028702/image.png?ex=68a89c73&is=68a74af3&hm=13b4ba7fbc642fc55de0c73723186ea72b5b68cdad91393440e985535356ac26&=&format=webp&quality=lossless&width=841&height=56"
+BANNER_URL = "https://media.discordapp.net/attachments/1395760490982150194/1408148733019033712/Group_1_1.png?ex=68a8b034&is=68a75eb4&hm=98265d0ed9c9f1a5d9cf760e73170ba2a95387fd5641e0e91ccf4c18a98db54e&=&format=webp&quality=lossless&width=694&height=55"
 THUMBNAIL_URL = "https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68a87f3a&is=68a72dba&hm=fe9137a4da93d2e5557eb2fc3c5e72e363e87ba57005d317c2b09c674f0abee8&=&format=webp&quality=lossless&width=640&height=640"
 
 EMBED_ROLE_ID = 1396992153208488057
