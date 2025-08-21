@@ -373,6 +373,54 @@ async def loa_request(interaction: discord.Interaction, user: discord.User, date
     await message.edit(view=LOAView())
     await interaction.response.send_message("LOA request submitted.", ephemeral=True)
 
+#LOA End Command
+@bot.tree.command(name="loa_end", description="End a user's LOA early.", guild=guild)
+@app_commands.describe(user="User whose LOA you want to end")
+async def loa_end(interaction: discord.Interaction, user: discord.User):
+    # Check if caller has approver role
+    if not any(role.id == LOA_APPROVER_ROLE_ID for role in interaction.user.roles):
+        return await interaction.response.send_message(
+            "You do not have permission to end LOAs.", ephemeral=True
+        )
+
+    guild_obj = interaction.guild
+    role = guild_obj.get_role(LOA_ROLE_ID)
+
+    # Check if user actually has LOA role
+    if role not in user.roles:
+        return await interaction.response.send_message(
+            f"{user.mention} does not currently have an active LOA.", ephemeral=True
+        )
+
+    # Remove LOA role
+    await user.remove_roles(role)
+
+    # DM the user a welcome back message
+    try:
+        await user.send(
+            embed=discord.Embed(
+                title="RYR RBX | Welcome Back",
+                description=f"Welcome back {user.mention}!\n\nYour LOA has ended early. We’re glad to see you again!",
+                color=0x193E75
+            ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
+        )
+    except Exception:
+        pass  # ignore if DMs are closed
+
+    # Delete their original LOA message if tracked
+    msg_id = active_loas.pop(user.id, None)
+    if msg_id:
+        try:
+            msg = await interaction.channel.fetch_message(msg_id)
+            await msg.delete()
+        except Exception as e:
+            print(f"Failed to delete LOA message: {e}")
+
+    # Acknowledge to staff
+    await interaction.response.send_message(
+        f"LOA ended early for {user.mention}.", ephemeral=True
+    )
+
 # /flightlogs_view command
 @bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
 @app_commands.describe(user="User to view logs for")
