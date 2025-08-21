@@ -83,7 +83,7 @@ async def app_results(interaction: discord.Interaction, user: discord.User, resu
         return
 
     footer_text, _ = generate_footer()
-    color = 193e75 if result.lower() == "pass" else 0xFF0000
+    color = 0x193E75 if result.lower() == "pass" else 0xFF0000
 
     embed = discord.Embed(
         title="RYR RBX | Application Result",
@@ -139,7 +139,7 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"Low fares, made simple."
         ),
-        color=193e75
+        color=0x193E75
     )
     embed.set_image(url=BANNER_URL)
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
@@ -174,7 +174,7 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
             f"Please do not delete your evidence.\n\n"
             f"**✈️ RYR RBX | Low fares, made simple.**"
         ),
-        color=193e75
+        color=0x193E75
     )
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=evidence.url)  # Show the uploaded image
@@ -206,7 +206,7 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
             f"Repeated infractions may lead to more severe consequences.\n\n"
             f"✈️ RYR RBX | Low fares, made simple."
         ),
-        color=193e75
+        color=0x193E75
     )
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=BANNER_URL)
@@ -237,7 +237,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
             f"Please join us in congratulating them.\n\n"
             f"✈️ RYR RBX | Low fares, made simple"
         ),
-        color=193e75
+        color=0x193E75
     )
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=BANNER_URL)
