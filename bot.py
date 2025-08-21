@@ -17,7 +17,7 @@ DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 GUILD_ID = int(os.environ['GUILD_ID'])
 
 BANNER_URL = "https://media.discordapp.net/attachments/1395760490982150194/1395769069541789736/Banner1.png?ex=6892b8fe&is=6891677e&hm=e7db83873781b6169784bb54c3526d91446c9b62000335bb725fd47188ced355&=&format=webp&quality=lossless&width=843&height=24"
-THUMBNAIL_URL = "https://media.discordapp.net/attachments/1395760490982150194/1398426011007324220/Jet2_Transparent.png?ex=68928036&is=68912eb6&hm=a45498eba85f03ecd17b520b90d1624088dc5268b098d8759b804c9b2e38f3a4&=&format=webp&quality=lossless&width=1131&height=1295"
+THUMBNAIL_URL = "https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68a87f3a&is=68a72dba&hm=fe9137a4da93d2e5557eb2fc3c5e72e363e87ba57005d317c2b09c674f0abee8&=&format=webp&quality=lossless&width=640&height=640"
 
 EMBED_ROLE_ID = 1396992153208488057
 APP_RESULTS_ROLE_ID = 1396992153208488057
@@ -83,18 +83,18 @@ async def app_results(interaction: discord.Interaction, user: discord.User, resu
         return
 
     footer_text, _ = generate_footer()
-    color = 0x00FF00 if result.lower() == "pass" else 0xFF0000
+    color = 193e75 if result.lower() == "pass" else 0xFF0000
 
     embed = discord.Embed(
-        title="Jet2.rbx | Application Result",
+        title="RYR RBX | Application Result",
         description=(
             f"Hello {user.mention},\n\n"
-            f"Thank you for applying to Jet2.com. Your application has been reviewed.\n\n"
+            f"Thank you for applying to RYR RBX. Your application has been reviewed.\n\n"
             f"**Result:** {result.capitalize()}\n"
             f"**Reason:** {reason}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"If you have any questions, please contact a member of management.\n\n"
-            f"✈️ Jet2.rbx — Friendly low fares. Friendly people."
+            f"✈️ RYR RBX — Low fares, made simple."
         ),
         color=color
     )
@@ -126,7 +126,7 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
     await interaction.channel.send("@everyone")
     
     embed = discord.Embed(
-        title=f"Jet2.rbx | Flight Briefing — {flight_code}",
+        title=f"RYR RBX | Flight Briefing — {flight_code}",
         description=(
             f"@everyone\n\n"
             f"✈️ **Flight Code:** {flight_code}\n"
@@ -137,9 +137,9 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
             f"**Game Link:** [Click Here]({game_link})  \n"
             f"**Voice Chat:** [Join Here]({vc_link})\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"Friendly low fares. Friendly people."
+            f"Low fares, made simple."
         ),
-        color=10364968
+        color=193e75
     )
     embed.set_image(url=BANNER_URL)
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
@@ -165,16 +165,16 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
     footer_text, log_id = generate_footer()
 
     embed = discord.Embed(
-        title="Jet2.rbx | Flight Log Submitted",
+        title="RYR RBX | Flight Log Submitted",
         description=(
             f"**👤 Staff Member:** {interaction.user.mention}  \n"
             f"**🛫 Flight Code:** {flight_code}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"Your flight has been successfully logged and submitted to our records system.\n"
             f"Please do not delete your evidence.\n\n"
-            f"**✈️ Jet2.com — Friendly low fares. Friendly people.**"
+            f"**✈️ RYR RBX | Low fares, made simple.**"
         ),
-        color=10364968
+        color=193e75
     )
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=evidence.url)  # Show the uploaded image
@@ -196,7 +196,7 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
     footer_text, inf_id = generate_footer()
 
     embed = discord.Embed(
-        title="Jet2.rbx | Infraction Notice",
+        title="RYR RBX | Infraction Notice",
         description=(
             f"**👤 User:** {user.mention}\n"
             f"**📄 Infraction:** {type}\n"
@@ -204,9 +204,9 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"Please acknowledge this notice and take appropriate steps.\n"
             f"Repeated infractions may lead to more severe consequences.\n\n"
-            f"✈️ Jet2.rbx — Friendly low fares. Friendly people."
+            f"✈️ RYR RBX | Low fares, made simple."
         ),
-        color=10364968
+        color=193e75
     )
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=BANNER_URL)
@@ -228,16 +228,16 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     footer_text, _ = generate_footer()
 
     embed = discord.Embed(
-        title="Jet2.rbx | Promotion Notice",
+        title="RYR RBX | Promotion Notice",
         description=(
             f"**👤 Staff Member:** {user.mention}\n"
             f"**⬆️ New Rank:** {promotion_to}\n"
             f"**📝 Reason for Promotion:**\n{reason}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"Please join us in congratulating them.\n\n"
-            f"✈️ Jet2.rbx — Friendly low fares. Friendly people."
+            f"✈️ RYR RBX | Low fares, made simple"
         ),
-        color=10364968
+        color=193e75
     )
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=BANNER_URL)
