@@ -384,18 +384,21 @@ async def loa_end(interaction: discord.Interaction, user: discord.User):
         )
 
     guild_obj = interaction.guild
-    role = guild_obj.get_role(LOA_ROLE_ID)
+    loa_role = guild_obj.get_role(LOA_ROLE_ID)
 
-    # Check if user actually has LOA role
-    if role not in user.roles:
+    # First check if they’re tracked in active_loas
+    msg_id = active_loas.get(user.id)
+
+    if not msg_id and loa_role not in user.roles:
         return await interaction.response.send_message(
             f"{user.mention} does not currently have an active LOA.", ephemeral=True
         )
 
-    # Remove LOA role
-    await user.remove_roles(role)
+    # Remove LOA role if they have it
+    if loa_role in user.roles:
+        await user.remove_roles(loa_role)
 
-    # DM the user a welcome back message
+    # DM the user
     try:
         await user.send(
             embed=discord.Embed(
@@ -405,18 +408,24 @@ async def loa_end(interaction: discord.Interaction, user: discord.User):
             ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
         )
     except Exception:
-        pass  # ignore if DMs are closed
+        pass
 
-    # Delete their original LOA message if tracked
-    msg_id = active_loas.pop(user.id, None)
+    # Delete their LOA message if tracked
     if msg_id:
         try:
-            msg = await interaction.channel.fetch_message(msg_id)
-            await msg.delete()
+            # search across all channels in guild
+            for channel in guild_obj.text_channels:
+                try:
+                    msg = await channel.fetch_message(msg_id)
+                    await msg.delete()
+                    break
+                except:
+                    continue
+            active_loas.pop(user.id, None)
         except Exception as e:
             print(f"Failed to delete LOA message: {e}")
 
-    # Acknowledge to staff
+    # Confirm to staff
     await interaction.response.send_message(
         f"LOA ended early for {user.mention}.", ephemeral=True
     )
