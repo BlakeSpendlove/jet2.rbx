@@ -12,12 +12,6 @@ intents.guilds = True
 intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
-active_loas = {}
-active_loas[user.id] = {
-    "message_id": message.id,
-    "channel_id": message.channel.id,
-    "end_date": end_date
-}
 
 DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 GUILD_ID = int(os.environ['GUILD_ID'])
@@ -378,67 +372,6 @@ async def loa_request(interaction: discord.Interaction, user: discord.User, date
 
     await message.edit(view=LOAView())
     await interaction.response.send_message("LOA request submitted.", ephemeral=True)
-
-#LOA End Command
-@bot.tree.command(name="loa_end", description="End a user's LOA early.", guild=guild)
-@app_commands.describe(user="User whose LOA you want to end")
-async def loa_end(interaction: discord.Interaction, user: discord.User):
-    global active_loas
-
-    # Check if user has an active LOA
-    loa_data = active_loas.get(user.id)
-    if not loa_data:
-        return await interaction.response.send_message(
-            f"{user.mention} does not currently have an active LOA.",
-            ephemeral=True
-        )
-
-    channel_id = loa_data["channel_id"]
-    message_id = loa_data["message_id"]
-    end_date = loa_data["end_date"]
-
-    # Check if LOA already expired naturally
-    now = datetime.utcnow().date()
-    if now > end_date:
-        active_loas.pop(user.id, None)
-        return await interaction.response.send_message(
-            f"{user.mention}'s LOA has already ended naturally.",
-            ephemeral=True
-        )
-
-    # Fetch the LOA message to delete
-    channel = bot.get_channel(channel_id)
-    try:
-        message = await channel.fetch_message(message_id)
-        await message.delete()
-    except discord.NotFound:
-        pass  # message already gone
-
-    # Remove LOA role
-    loa_role = interaction.guild.get_role(LOA_ROLE_ID)
-    if loa_role and loa_role in user.roles:
-        await user.remove_roles(loa_role)
-
-    # DM the user a welcome back
-    try:
-        embed = discord.Embed(
-            title="Welcome Back!",
-            description="Your LOA has been ended early. We hope you had a nice time away!",
-            color=discord.Color.green()
-        )
-        embed.set_image(url=BANNER_URL)
-        embed.set_thumbnail(url=THUMBNAIL_URL)
-        await user.send(embed=embed)
-    except discord.Forbidden:
-        pass
-
-    # Remove from active LOAs
-    active_loas.pop(user.id, None)
-
-    await interaction.response.send_message(
-        f"{user.mention}'s LOA has been ended early and they’ve been welcomed back.",
-        ephemeral=True
-    )
 
 # /flightlogs_view command
 @bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
