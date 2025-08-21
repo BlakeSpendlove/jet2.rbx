@@ -250,10 +250,10 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     await channel.send(content=user.mention, embed=embed)
     await interaction.response.send_message("Promotion logged.", ephemeral=True)
 
+# LOA Request Command
 @bot.tree.command(name="loa_request", description="Request a leave of absence.", guild=guild)
-@app_commands.describe(user="User requesting LOA", date_from="Start date (YYYY-MM-DD)", date_to="End date (YYYY-MM-DD)", reason="Reason for LOA")
+@app_commands.describe(user="User requesting LOA", date_from="Start date (DD/MM/YYYY)", date_to="End date (DD/MM/YYYY)", reason="Reason for LOA")
 async def loa_request(interaction: discord.Interaction, user: discord.User, date_from: str, date_to: str, reason: str):
-    # Create footer
     footer_text, _ = generate_footer()
 
     embed = discord.Embed(
@@ -273,19 +273,18 @@ async def loa_request(interaction: discord.Interaction, user: discord.User, date
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_footer(text=footer_text)
 
-    class LOAView(ui.View):
+    class LOAView(discord.ui.View):
         def __init__(self):
             super().__init__(timeout=None)
 
         async def interaction_check(self, button_inter: discord.Interaction) -> bool:
-            # Only allow users with the approver role
             if not any(role.id == LOA_APPROVER_ROLE_ID for role in button_inter.user.roles):
                 await button_inter.response.send_message("You do not have permission to approve/deny LOAs.", ephemeral=True)
                 return False
             return True
 
-        @ui.button(label="✅ Approve", style=discord.ButtonStyle.green)
-        async def approve(self, button_inter: discord.Interaction, button: ui.Button):
+        @discord.ui.button(label="✅ Approve", style=discord.ButtonStyle.green)
+        async def approve(self, button_inter: discord.Interaction, button: discord.ui.Button):
             guild_obj = interaction.guild
             role = guild_obj.get_role(LOA_ROLE_ID)
 
@@ -297,12 +296,11 @@ async def loa_request(interaction: discord.Interaction, user: discord.User, date
                     color=0x193E75
                 ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
             )
-
             await button_inter.response.send_message(f"LOA approved for {user.mention}.", ephemeral=True)
 
-            # Schedule removal of role at date_to
+            # Schedule removal of role
             try:
-                end_date = datetime.strptime(date_to, "%Y-%m-%d")
+                end_date = datetime.strptime(date_to, "%d/%m/%Y")
                 now = datetime.utcnow()
                 delay = (end_date - now).total_seconds()
                 if delay > 0:
@@ -320,8 +318,8 @@ async def loa_request(interaction: discord.Interaction, user: discord.User, date
             except Exception as e:
                 print(f"Failed to schedule LOA removal: {e}")
 
-        @ui.button(label="❌ Deny", style=discord.ButtonStyle.red)
-        async def deny(self, button_inter: discord.Interaction, button: ui.Button):
+        @discord.ui.button(label="❌ Deny", style=discord.ButtonStyle.red)
+        async def deny(self, button_inter: discord.Interaction, button: discord.ui.Button):
             await user.send(
                 embed=discord.Embed(
                     title="RYR RBX | LOA Denied",
