@@ -13,7 +13,11 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 active_loas = {}
-
+active_loas[user.id] = {
+    "message_id": message.id,
+    "channel_id": message.channel.id,
+    "end_date": end_date
+}
 
 DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 GUILD_ID = int(os.environ['GUILD_ID'])
@@ -379,57 +383,61 @@ async def loa_request(interaction: discord.Interaction, user: discord.User, date
 @bot.tree.command(name="loa_end", description="End a user's LOA early.", guild=guild)
 @app_commands.describe(user="User whose LOA you want to end")
 async def loa_end(interaction: discord.Interaction, user: discord.User):
-    # Check if caller has approver role
-    if not any(role.id == LOA_APPROVER_ROLE_ID for role in interaction.user.roles):
+    global active_loas
+
+    # Check if user has an active LOA
+    loa_data = active_loas.get(user.id)
+    if not loa_data:
         return await interaction.response.send_message(
-            "You do not have permission to end LOAs.", ephemeral=True
+            f"{user.mention} does not currently have an active LOA.",
+            ephemeral=True
         )
 
-    guild_obj = interaction.guild
-    loa_role = guild_obj.get_role(LOA_ROLE_ID)
+    channel_id = loa_data["channel_id"]
+    message_id = loa_data["message_id"]
+    end_date = loa_data["end_date"]
 
-    # First check if they’re tracked in active_loas
-    msg_id = active_loas.get(user.id)
-
-    if not msg_id and loa_role not in user.roles:
+    # Check if LOA already expired naturally
+    now = datetime.utcnow().date()
+    if now > end_date:
+        active_loas.pop(user.id, None)
         return await interaction.response.send_message(
-            f"{user.mention} does not currently have an active LOA.", ephemeral=True
+            f"{user.mention}'s LOA has already ended naturally.",
+            ephemeral=True
         )
 
-    # Remove LOA role if they have it
-    if loa_role in user.roles:
+    # Fetch the LOA message to delete
+    channel = bot.get_channel(channel_id)
+    try:
+        message = await channel.fetch_message(message_id)
+        await message.delete()
+    except discord.NotFound:
+        pass  # message already gone
+
+    # Remove LOA role
+    loa_role = interaction.guild.get_role(LOA_ROLE_ID)
+    if loa_role and loa_role in user.roles:
         await user.remove_roles(loa_role)
 
-    # DM the user
+    # DM the user a welcome back
     try:
-        await user.send(
-            embed=discord.Embed(
-                title="RYR RBX | Welcome Back",
-                description=f"Welcome back {user.mention}!\n\nYour LOA has ended early. We’re glad to see you again!",
-                color=0x193E75
-            ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
+        embed = discord.Embed(
+            title="Welcome Back!",
+            description="Your LOA has been ended early. We hope you had a nice time away!",
+            color=discord.Color.green()
         )
-    except Exception:
+        embed.set_image(url=BANNER_URL)
+        embed.set_thumbnail(url=THUMBNAIL_URL)
+        await user.send(embed=embed)
+    except discord.Forbidden:
         pass
 
-    # Delete their LOA message if tracked
-    if msg_id:
-        try:
-            # search across all channels in guild
-            for channel in guild_obj.text_channels:
-                try:
-                    msg = await channel.fetch_message(msg_id)
-                    await msg.delete()
-                    break
-                except:
-                    continue
-            active_loas.pop(user.id, None)
-        except Exception as e:
-            print(f"Failed to delete LOA message: {e}")
+    # Remove from active LOAs
+    active_loas.pop(user.id, None)
 
-    # Confirm to staff
     await interaction.response.send_message(
-        f"LOA ended early for {user.mention}.", ephemeral=True
+        f"{user.mention}'s LOA has been ended early and they’ve been welcomed back.",
+        ephemeral=True
     )
 
 # /flightlogs_view command
