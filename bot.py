@@ -45,6 +45,10 @@ async def on_ready():
 def has_role(interaction: discord.Interaction, role_id: int) -> bool:
     return any(role.id == role_id for role in interaction.user.roles)
 
+
+def generate_id(length=6):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
 # Embed command with set_author added
 @bot.tree.command(name="embed", description="Send a custom embed.", guild=guild)
 @app_commands.describe(embed_json="Embed JSON content")
@@ -398,6 +402,10 @@ async def results(interaction: discord.Interaction, user: discord.User, departme
     if RESULTS_ROLE_ID not in [role.id for role in interaction.user.roles]:
         return await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
 
+    # Generate ID + timestamp
+    unique_id = generate_id()
+    timestamp = datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC")
+
     embed = discord.Embed(
         title="Ryanair RBX | Result",
         description=(
@@ -406,7 +414,7 @@ async def results(interaction: discord.Interaction, user: discord.User, departme
             f"**Result:**\n{result}\n\n"
             f"**Reason:**\n{reason}"
         ),
-        color=0x19388D  # matches your JSON color 1654389
+        color=0x19388D  # matches your JSON color
     )
 
     # Thumbnail + Image from your Discohook JSON
@@ -419,6 +427,9 @@ async def results(interaction: discord.Interaction, user: discord.User, departme
 
     # Author field like LOA command
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+
+    # Footer with ID + timestamp
+    embed.set_footer(text=f"RESULTS ID: {unique_id} • Logged: {timestamp}")
 
     await interaction.response.send_message(embed=embed)
 
