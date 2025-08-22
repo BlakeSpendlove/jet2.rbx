@@ -190,6 +190,12 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
 # /infraction command
 @bot.tree.command(name="infraction", description="Log an infraction, demotion, or termination.", guild=guild)
 @app_commands.describe(user="User", type="Infraction type", reason="Reason")
+@app_commands.choices(type=[
+    app_commands.Choice(name="Warning", value="Warning"),
+    app_commands.Choice(name="Infraction", value="Infraction"),
+    app_commands.Choice(name="Demotion", value="Demotion"),
+    app_commands.Choice(name="Termination", value="Termination"),
+])
 async def infraction(
     interaction: discord.Interaction,
     user: discord.User,
@@ -223,22 +229,6 @@ async def infraction(
     channel = bot.get_channel(INFRACTION_CHANNEL_ID)
     await channel.send(content=user.mention, embed=embed)
     await interaction.response.send_message("Infraction logged.", ephemeral=True)
-
-
-# Register choices for "type"
-infraction = app_commands.Command(
-    name="infraction",
-    description="Log an infraction, demotion, or termination.",
-    callback=infraction,
-    guild_ids=[guild.id],
-)
-
-infraction.parameters[1].choices = [
-    app_commands.Choice(name="Warning", value="Warning"),
-    app_commands.Choice(name="Infraction", value="Infraction"),
-    app_commands.Choice(name="Demotion", value="Demotion"),
-    app_commands.Choice(name="Termination", value="Termination"),
-]
 
 # /promote command
 @bot.tree.command(name="promote", description="Log a promotion.", guild=guild)
