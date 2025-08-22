@@ -435,6 +435,9 @@ async def results(interaction: discord.Interaction, user: discord.User, departme
 
     await interaction.response.send_message(embed=embed)
 
+    # Ping user outside embed
+    await interaction.response.send_message(content=user.mention, embed=embed)
+
 # /flightlogs_view command
 @bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
 @app_commands.describe(user="User to view logs for")
