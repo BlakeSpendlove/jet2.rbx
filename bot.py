@@ -402,41 +402,45 @@ async def loa_request(interaction: discord.Interaction, user: discord.User, date
 async def results(interaction: discord.Interaction, user: discord.User, department: str, result: str, reason: str):
     # Role check
     if RESULTS_ROLE_ID not in [role.id for role in interaction.user.roles]:
-        return await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+        return await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
 
-    # Generate ID + timestamp
-    unique_id = generate_id()
-    timestamp = datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC")
+    try:
+        # Generate ID + timestamp
+        unique_id = generate_id()
+        timestamp = datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC")
 
-    embed = discord.Embed(
-        title="Ryanair RBX | Result",
-        description=(
-            f"**User:**\n{user.mention}\n\n"
-            f"**Department:**\n{department}\n\n"
-            f"**Result:**\n{result}\n\n"
-            f"**Reason:**\n{reason}"
-        ),
-        color=0x19388D  # matches your JSON color
-    )
+        embed = discord.Embed(
+            title="Ryanair RBX | Result",
+            description=(
+                f"**User:**\n{user.mention}\n\n"
+                f"**Department:**\n{department}\n\n"
+                f"**Result:**\n{result}\n\n"
+                f"**Reason:**\n{reason}"
+            ),
+            color=0x19388D
+        )
 
-    # Thumbnail + Image from your Discohook JSON
-    embed.set_thumbnail(
-        url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68a927fa&is=68a7d67a&hm=9d1ac68231b840543e973cab63f4f4a304e88e4c736f294d4bc95efb7890bc44&=&format=webp&quality=lossless&width=640&height=640"
-    )
-    embed.set_image(
-        url="https://media.discordapp.net/attachments/1395760490982150194/1408148733019033712/Group_1_1.png?ex=68a958f4&is=68a80774&hm=e048ddd33e13639e64970cd7b0c0af4c1ebb55f856231b413dfef32da6215ade&=&format=webp&quality=lossless&width=694&height=55"
-    )
+        embed.set_thumbnail(
+            url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68a927fa&is=68a7d67a&hm=9d1ac68231b840543e973cab63f4f4a304e88e4c736f294d4bc95efb7890bc44&=&format=webp&quality=lossless&width=640&height=640"
+        )
+        embed.set_image(
+            url="https://media.discordapp.net/attachments/1395760490982150194/1408148733019033712/Group_1_1.png?ex=68a958f4&is=68a80774&hm=e048ddd33e13639e64970cd7b0c0af4c1ebb55f856231b413dfef32da6215ade&=&format=webp&quality=lossless&width=694&height=55"
+        )
+        embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+        embed.set_footer(text=f"RESULTS ID: {unique_id} • Logged: {timestamp}")
 
-    # Author field like LOA command
-    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+        # Send result publicly (with user ping)
+        await interaction.channel.send(content=user.mention, embed=embed)
 
-    # Footer with ID + timestamp
-    embed.set_footer(text=f"RESULTS ID: {unique_id} • Logged: {timestamp}")
+        # Confirm privately to command user
+        await interaction.response.send_message(
+            f"✅ Results sent successfully! (Ticket: `{unique_id}`)", ephemeral=True
+        )
 
-    await interaction.response.send_message(embed=embed)
-
-    # Ping user outside embed
-    await interaction.response.send_message(content=user.mention, embed=embed)
+    except Exception as e:
+        await interaction.response.send_message(
+            f"❌ Failed to send results: `{e}`", ephemeral=True
+        )
 
 # /flightlogs_view command
 @bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
