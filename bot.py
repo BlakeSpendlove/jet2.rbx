@@ -385,6 +385,43 @@ async def loa_request(interaction: discord.Interaction, user: discord.User, date
     await message.edit(view=LOAView())
     await interaction.response.send_message("LOA request submitted.", ephemeral=True)
 
+# Results Command
+@bot.tree.command(name="results", description="Log a training result for a user.", guild=guild)
+@app_commands.describe(
+    user="The user the result is for",
+    department="The department of the training",
+    result="The result (Pass/Fail/etc.)",
+    reason="The reason for this result"
+)
+async def results(interaction: discord.Interaction, user: discord.User, department: str, result: str, reason: str):
+    # Role check
+    if RESULTS_ROLE_ID not in [role.id for role in interaction.user.roles]:
+        return await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+
+    embed = discord.Embed(
+        title="Ryanair RBX | Result",
+        description=(
+            f"**User:**\n{user.mention}\n\n"
+            f"**Department:**\n{department}\n\n"
+            f"**Result:**\n{result}\n\n"
+            f"**Reason:**\n{reason}"
+        ),
+        color=0x19388D  # matches your JSON color 1654389
+    )
+
+    # Thumbnail + Image from your Discohook JSON
+    embed.set_thumbnail(
+        url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68a927fa&is=68a7d67a&hm=9d1ac68231b840543e973cab63f4f4a304e88e4c736f294d4bc95efb7890bc44&=&format=webp&quality=lossless&width=640&height=640"
+    )
+    embed.set_image(
+        url="https://media.discordapp.net/attachments/1395760490982150194/1408148733019033712/Group_1_1.png?ex=68a958f4&is=68a80774&hm=e048ddd33e13639e64970cd7b0c0af4c1ebb55f856231b413dfef32da6215ade&=&format=webp&quality=lossless&width=694&height=55"
+    )
+
+    # Author field like LOA command
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+
+    await interaction.response.send_message(embed=embed)
+
 # /flightlogs_view command
 @bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
 @app_commands.describe(user="User to view logs for")
