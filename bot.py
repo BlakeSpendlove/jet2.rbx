@@ -86,20 +86,29 @@ async def embed(interaction: discord.Interaction, embed_json: str):
 # Application result command
 @bot.tree.command(name="app_results", description="Send application result to user.", guild=guild)
 @app_commands.describe(user="User to DM", result="Pass or Fail", reason="Reason for result")
-async def app_results(interaction: discord.Interaction, user: discord.User, result: str, reason: str):
+@app_commands.choices(result=[
+    app_commands.Choice(name="Pass", value="pass"),
+    app_commands.Choice(name="Fail", value="fail")
+])
+async def app_results(
+    interaction: discord.Interaction,
+    user: discord.User,
+    result: app_commands.Choice[str],
+    reason: str
+):
     if not has_role(interaction, APP_RESULTS_ROLE_ID):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
     footer_text, _ = generate_footer()
-    color = 0x193E75 if result.lower() == "pass" else 0xFF0000
+    color = 0x193E75 if result.value == "pass" else 0xFF0000
 
     embed = discord.Embed(
         title="RYR RBX | Application Result",
         description=(
             f"Hello {user.mention},\n\n"
             f"Thank you for applying to RYR RBX. Your application has been reviewed.\n\n"
-            f"**Result:** {result.capitalize()}\n"
+            f"**Result:** {result.name}\n"
             f"**Reason:** {reason}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"If you have any questions, please contact a member of management.\n\n"
