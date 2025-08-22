@@ -136,8 +136,8 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
             f"Welcome to your flight briefing.\n\n"
             f"Please review all details carefully and join the links below at the scheduled time.\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"**Game Link:** [Click Here]({game_link})  \n"
-            f"**Voice Chat:** [Join Here]({vc_link})\n\n"
+            f"**✈️ Game Link:** [Click Here]({game_link})  \n"
+            f"**📞 Voice Chat:** [Join Here]({vc_link})\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"Low fares, made simple."
         ),
@@ -190,7 +190,12 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
 # /infraction command
 @bot.tree.command(name="infraction", description="Log an infraction, demotion, or termination.", guild=guild)
 @app_commands.describe(user="User", type="Infraction type", reason="Reason")
-async def infraction(interaction: discord.Interaction, user: discord.User, type: str, reason: str):
+async def infraction(
+    interaction: discord.Interaction,
+    user: discord.User,
+    type: app_commands.Choice[str],
+    reason: str
+):
     if not has_role(interaction, INFRACTION_ROLE_ID):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
@@ -201,7 +206,7 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
         title="RYR RBX | Infraction Notice",
         description=(
             f"**👤 User:** {user.mention}\n"
-            f"**📄 Infraction:** {type}\n"
+            f"**📄 Infraction:** {type.value}\n"
             f"**📝 Reason:** {reason}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"Please acknowledge this notice and take appropriate steps.\n"
@@ -218,6 +223,22 @@ async def infraction(interaction: discord.Interaction, user: discord.User, type:
     channel = bot.get_channel(INFRACTION_CHANNEL_ID)
     await channel.send(content=user.mention, embed=embed)
     await interaction.response.send_message("Infraction logged.", ephemeral=True)
+
+
+# Register choices for "type"
+infraction = app_commands.Command(
+    name="infraction",
+    description="Log an infraction, demotion, or termination.",
+    callback=infraction,
+    guild_ids=[guild.id],
+)
+
+infraction.parameters[1].choices = [
+    app_commands.Choice(name="Warning", value="Warning"),
+    app_commands.Choice(name="Infraction", value="Infraction"),
+    app_commands.Choice(name="Demotion", value="Demotion"),
+    app_commands.Choice(name="Termination", value="Termination"),
+]
 
 # /promote command
 @bot.tree.command(name="promote", description="Log a promotion.", guild=guild)
