@@ -193,6 +193,7 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
         "timestamp": timestamp,
         "logger": str(interaction.user),
         "evidence": evidence.url,
+        "log_id": log_id,
     })
 
     # Embed for logging
@@ -212,7 +213,7 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=evidence.url)
     embed.set_thumbnail(url=THUMBNAIL_URL)
-    embed.set_footer(text=footer_text)
+    embed.set_footer(text=f"{footer_text} • ID: {log_id}")
 
     channel = bot.get_channel(FLIGHT_LOG_CHANNEL_ID)
     await channel.send(content=interaction.user.mention, embed=embed)
@@ -529,13 +530,14 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
                 f"**Code:** {log['flight_code']}\n"
                 f"**Date:** {log['timestamp']}\n"
                 f"**Logged By:** {log['logger']}\n"
+                f"**ID:** `{log['log_id']}`\n"
                 f"[📎 Evidence]({log['evidence']})"
             ),
             inline=False
         )
 
     footer_text, _ = generate_footer()
-    embed.set_footer(text=footer_text)
+    embed.set_footer(text=f"{footer_text} • Showing {len(logs)} logs")
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
