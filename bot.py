@@ -701,7 +701,7 @@ async def infractions_remove(interaction: discord.Interaction, user: discord.Use
 
     await interaction.response.send_message(f"❌ No infraction with ID `{infraction_id}` found for {user.mention}.", ephemeral=True)
 
-# Recruitment day CMD
+# Recruitment day CMD (Embed + Discord Event)
 @bot.tree.command(name="recruitment_day", description="Announce a recruitment day and create an event.", guild=guild)
 @app_commands.describe(
     host="Host of the recruitment day (@DisplayName (@DiscordTag))",
@@ -715,15 +715,18 @@ async def recruitment_day(interaction: discord.Interaction, host: str, departmen
         await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
         return
 
-    # Extract mention from input like "@DisplayName (@DiscordTag)"
     import re
+    from datetime import timedelta
+
+    # Extract Discord mention if provided
     mention_match = re.search(r"<@!?(\d+)>", host)
-    host_mention = mention_match.group(0) if mention_match else host  # fallback to raw text if no mention
+    host_mention = mention_match.group(0) if mention_match else host
 
     try:
         # Parse date and time
         start_dt = datetime.strptime(f"{date} {time}", "%d/%m/%Y %H:%M")
-        end_dt = start_dt + timedelta(minutes=45)
+        end_dt = start_dt + timedelta(minutes=45)  # 45-minute event
+        unix_ts = int(start_dt.timestamp())  # Discord timestamp
     except Exception:
         await interaction.response.send_message(
             "❌ Invalid date or time format. Use DD/MM/YYYY for date and HH:MM (24-hour UTC).", ephemeral=True
@@ -733,12 +736,13 @@ async def recruitment_day(interaction: discord.Interaction, host: str, departmen
     footer_text, _ = generate_footer()
     channel = bot.get_channel(RECRUITMENT_DAY_CHANNEL_ID)
 
-    # Send embed + @everyone ping
-    content = "@everyone"
+    # Embed for announcement
     embed = discord.Embed(
         title="RYR RBX | Recruitment Day",
         description=(
-            f"There is currently a recruitment day for {department} going on at {time} UTC on {date}. **Here is what you need to know:**\n\n"
+            f"There is currently a recruitment day for {department} scheduled.\n\n"
+            f"**Host:** {host_mention}\n"
+            f"**Time:** <t:{unix_ts}:F> UTC\n\n"
             "- You are required to be over the age of 13\n"
             "- You agree to not leak any documents given by Ryanair RBX, doing so will result in an immediate blacklist\n"
             "- You are required to use SPaG at all times excluding the Discord Server.\n"
@@ -749,11 +753,12 @@ async def recruitment_day(interaction: discord.Interaction, host: str, departmen
         color=1654389
     )
     embed.set_author(name=f"Ryanair RBX | {department} Recruitment Day")
-    embed.set_image(url=BANNER_URL)  # Event image uses this
     embed.set_thumbnail(url=THUMBNAIL_URL)
+    embed.set_image(url=BANNER_URL)  # only for embed styling
     embed.set_footer(text=footer_text)
 
-    await channel.send(content=content, embed=embed)
+    # Send announcement embed
+    await channel.send(content="@everyone", embed=embed)
 
     # Create Discord scheduled event
     guild_obj = interaction.guild
@@ -766,8 +771,7 @@ async def recruitment_day(interaction: discord.Interaction, host: str, departmen
             f"Department: {department}\n"
             f"Date: {date}\n"
             f"Time: {time} UTC\n\n"
-            "Please follow the guidelines and join the recruitment day link below.\n"
-            f"{game_link}"
+            f"Please join using the link below:\n{game_link}"
         ),
         location=None,
         entity_type=discord.EntityType.external,
@@ -776,6 +780,6 @@ async def recruitment_day(interaction: discord.Interaction, host: str, departmen
         image=RECRUITMENT_URL.encode() if RECRUITMENT_URL else None
     )
 
-    await interaction.response.send_message(f"✅ Recruitment Day for {department} scheduled and announced!", ephemeral=True)
+    await interaction.response.send_message(f"✅ Recruitment Day for {department} announced and event created!", ephemeral=True)
 
 bot.run(DISCORD_TOKEN)
