@@ -451,6 +451,41 @@ async def results(interaction: discord.Interaction, user: discord.User, departme
             f"❌ Failed to send results: `{e}`", ephemeral=True
         )
 
+# /dm command
+@bot.tree.command(name="dm", description="DM a user with a custom embed (JSON).", guild=guild)
+@app_commands.describe(user="User to DM", embed_json="Embed JSON content")
+async def dm(interaction: discord.Interaction, user: discord.User, embed_json: str):
+    if not has_role(interaction, EMBED_ROLE_ID):
+        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+        return
+
+    try:
+        data = json.loads(embed_json)
+    except json.JSONDecodeError:
+        await interaction.response.send_message("Invalid JSON.", ephemeral=True)
+        return
+
+    if "embeds" not in data or not isinstance(data["embeds"], list) or len(data["embeds"]) == 0:
+        await interaction.response.send_message("Embed JSON must include an 'embeds' array with at least one embed.", ephemeral=True)
+        return
+
+    embed_data = data["embeds"][0]
+    if not any(k in embed_data for k in ("description", "title", "fields")):
+        await interaction.response.send_message("Embed JSON must have at least a description, title, or fields.", ephemeral=True)
+        return
+
+    embed = discord.Embed.from_dict(embed_data)
+    embed.set_image(url=BANNER_URL)
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    footer_text, _ = generate_footer()
+    embed.set_footer(text=footer_text)
+
+    try:
+        await user.send(embed=embed)
+        await interaction.response.send_message(f"Embed sent to {user.mention}.", ephemeral=True)
+    except Exception:
+        await interaction.response.send_message(f"Failed to DM {user.mention}.", ephemeral=True)
+
 # /flightlogs_view command
 @bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
 @app_commands.describe(user="User to view logs for")
