@@ -42,6 +42,8 @@ guild = discord.Object(id=GUILD_ID)
 
 flight_logs = {}
 
+infractions = {}
+
 @bot.event
 async def on_ready():
     await bot.tree.sync(guild=guild)
@@ -582,5 +584,99 @@ async def flightlog_remove(interaction: discord.Interaction, user: discord.User,
 
     # If not found
     await interaction.response.send_message(f"❌ No flight log with ID `{log_id}` found for {user.mention}.", ephemeral=True)
+
+# /infractions_view command
+@bot.tree.command(name="infractions_view", description="View a user's infractions.", guild=guild)
+@app_commands.describe(user="User to view infractions for")
+async def infractions_view(interaction: discord.Interaction, user: discord.User):
+    if not has_role(interaction, INFRACTION_VIEW_ROLE_ID):  # new role var
+        await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
+        return
+
+    user_infractions = infractions.get(user.id, [])
+    if not user_infractions:
+        await interaction.response.send_message(f"{user.mention} has no infractions logged.", ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title=f"{user.name} | Infractions",
+        color=0xE74C3C
+    )
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    embed.set_thumbnail(url=THUMBNAIL_URL)
+    embed.set_image(url=BANNER_URL)
+
+    for inf in user_infractions:
+        embed.add_field(
+            name=f"🚨 {inf['type']}",
+            value=f"**Date:** {inf['timestamp']}\n**ID:** `{inf['id']}`",
+            inline=False
+        )
+
+    footer_text, _ = generate_footer()
+    embed.set_footer(text=footer_text)
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
+# /infractions_remove command
+@bot.tree.command(name="infractions_remove", description="Remove an infraction by ID.", guild=guild)
+@app_commands.describe(user="User to remove an infraction from", infraction_id="The ID of the infraction to remove")
+async def infractions_remove(interaction: discord.Interaction, user: discord.User, infraction_id: str):
+    if not has_role(interaction, INFRACTION_REMOVE_ROLE_ID):  # new role var
+        await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
+        return
+
+    user_infractions = infractions.get(user.id, [])
+    if not user_infractions:
+        await interaction.response.send_message(f"No infractions found for {user.mention}.", ephemeral=True)
+        return
+
+    for inf in user_infractions:
+        if inf["id"].upper() == infraction_id.upper():
+            user_infractions.remove(inf)
+            footer_text, _ = generate_footer()
+
+            # Confirmation embed for staff
+            confirm_embed = discord.Embed(
+                title="🚨 Infraction Removed",
+                description=(
+                    f"**User:** {user.mention}\n"
+                    f"**Removed ID:** `{infraction_id}`\n"
+                    f"**Type:** {inf['type']}\n"
+                    f"**Date:** {inf['timestamp']}\n\n"
+                    f"✅ This infraction has been removed."
+                ),
+                color=0xE74C3C
+            )
+            confirm_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+            confirm_embed.set_thumbnail(url=THUMBNAIL_URL)
+            confirm_embed.set_image(url=BANNER_URL)
+            confirm_embed.set_footer(text=footer_text)
+
+            await interaction.response.send_message(embed=confirm_embed, ephemeral=True)
+
+            # Audit trail to INFRACTION_CHANNEL_ID
+            audit_embed = discord.Embed(
+                title="🗑️ Infraction Removal Logged",
+                description=(
+                    f"**Removed By:** {interaction.user.mention}\n"
+                    f"**Target User:** {user.mention}\n"
+                    f"**ID:** `{infraction_id}`\n"
+                    f"**Type:** {inf['type']}\n"
+                    f"**Date:** {inf['timestamp']}"
+                ),
+                color=0xE74C3C
+            )
+            audit_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+            audit_embed.set_thumbnail(url=THUMBNAIL_URL)
+            audit_embed.set_image(url=BANNER_URL)
+            audit_embed.set_footer(text=footer_text)
+
+            channel = bot.get_channel(INFRACTION_CHANNEL_ID)
+            if channel:
+                await channel.send(embed=audit_embed)
+
+            return
+
+    await interaction.response.send_message(f"❌ No infraction with ID `{infraction_id}` found for {user.mention}.", ephemeral=True)
 
 bot.run(DISCORD_TOKEN)
