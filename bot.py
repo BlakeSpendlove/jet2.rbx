@@ -268,7 +268,7 @@ async def infraction(
             f"Repeated infractions may lead to more severe consequences.\n\n"
             f"✈️ RYR RBX | Low fares, made simple."
         ),
-        color=0xE74C3C
+        color=0x193E75
     )
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=BANNER_URL)
