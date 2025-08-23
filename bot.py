@@ -707,14 +707,16 @@ async def infractions_remove(interaction: discord.Interaction, user: discord.Use
     host="Host of the recruitment day (@DisplayName (@DiscordTag))",
     department="Department for recruitment",
     date="Date of the recruitment day (DD/MM/YYYY)",
-    time="Time of the recruitment day (HH:MM in UTC)"
+    time="Time of the recruitment day (HH:MM in UTC)",
+    game_link="Link to the recruitment day session/game"
 )
-async def recruitment_day(interaction: discord.Interaction, host: str, department: str, date: str, time: str):
+async def recruitment_day(interaction: discord.Interaction, host: str, department: str, date: str, time: str, game_link: str):
     if not has_role(interaction, EMBED_ROLE_ID):
         await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
         return
 
     # Extract mention from input like "@DisplayName (@DiscordTag)"
+    import re
     mention_match = re.search(r"<@!?(\d+)>", host)
     host_mention = mention_match.group(0) if mention_match else host  # fallback to raw text if no mention
 
@@ -741,13 +743,13 @@ async def recruitment_day(interaction: discord.Interaction, host: str, departmen
             "- You agree to not leak any documents given by Ryanair RBX, doing so will result in an immediate blacklist\n"
             "- You are required to use SPaG at all times excluding the Discord Server.\n"
             "- You are to remain professional at all times, unless having a small joke within the Staffing channels.\n\n"
-            f"For this Recruitment day, please join through the link below\n:link: {RECRUITMENT_URL}\n\n"
+            f"For this Recruitment Day, please join through the link below:\n:link: {game_link}\n\n"
             "We hope to see you there! :wave:"
         ),
         color=1654389
     )
     embed.set_author(name=f"Ryanair RBX | {department} Recruitment Day")
-    embed.set_image(url=BANNER_URL)
+    embed.set_image(url=BANNER_URL)  # Event image uses this
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=footer_text)
 
@@ -765,11 +767,11 @@ async def recruitment_day(interaction: discord.Interaction, host: str, departmen
             f"Date: {date}\n"
             f"Time: {time} UTC\n\n"
             "Please follow the guidelines and join the recruitment day link below.\n"
-            f"{RECRUITMENT_URL}"
+            f"{game_link}"
         ),
         location=None,
         entity_type=discord.EntityType.external,
-        entity_metadata={"location": RECRUITMENT_URL},
+        entity_metadata={"location": game_link},
         privacy_level=discord.PrivacyLevel.guild_only,
         image=RECRUITMENT_URL.encode() if RECRUITMENT_URL else None
     )
