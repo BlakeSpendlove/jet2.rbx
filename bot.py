@@ -39,6 +39,8 @@ FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516
 
 guild = discord.Object(id=GUILD_ID)
 
+flight_logs = {}
+
 @bot.event
 async def on_ready():
     await bot.tree.sync(guild=guild)
@@ -181,21 +183,34 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
         return
 
     footer_text, log_id = generate_footer()
+    timestamp = datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC")
 
+    # Save the log in memory
+    if interaction.user.id not in flight_logs:
+        flight_logs[interaction.user.id] = []
+    flight_logs[interaction.user.id].append({
+        "flight_code": flight_code,
+        "timestamp": timestamp,
+        "logger": str(interaction.user),
+        "evidence": evidence.url,
+    })
+
+    # Embed for logging
     embed = discord.Embed(
         title="RYR RBX | Flight Log Submitted",
         description=(
-            f"**👤 Staff Member:** {interaction.user.mention}  \n"
-            f"**🛫 Flight Code:** {flight_code}\n\n"
+            f"**👤 Staff Member:** {interaction.user.mention}\n"
+            f"**🛫 Flight Code:** {flight_code}\n"
+            f"**📅 Date:** {timestamp}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"Your flight has been successfully logged and submitted to our records system.\n"
+            f"Your flight has been successfully logged and submitted.\n"
             f"Please do not delete your evidence.\n\n"
-            f"**✈️ RYR RBX | Low fares, made simple.**"
+            f"✈️ RYR RBX | Low fares, made simple."
         ),
         color=0x193E75
     )
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-    embed.set_image(url=evidence.url)  # Show the uploaded image
+    embed.set_image(url=evidence.url)
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=footer_text)
 
@@ -278,7 +293,6 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     await interaction.response.send_message("Promotion logged.", ephemeral=True)
 
 # LOA Request Command
-
 @bot.tree.command(name="loa_request", description="Request a leave of absence.", guild=guild)
 @app_commands.describe(user="User requesting LOA", date_from="Start date (DD/MM/YYYY)", date_to="End date (DD/MM/YYYY)", reason="Reason for LOA")
 async def loa_request(interaction: discord.Interaction, user: discord.User, date_from: str, date_to: str, reason: str):
@@ -494,7 +508,35 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    # Placeholder for real data from DB
-    await interaction.response.send_message(f"Showing flight logs for {user.mention} (demo data).", ephemeral=True)
+    logs = flight_logs.get(user.id, [])
+    if not logs:
+        await interaction.response.send_message(f"No flight logs found for {user.mention}.", ephemeral=True)
+        return
+
+    embed = discord.Embed(
+        title=f"{user.name} | Flight Logs",
+        description="Here are the recorded flights:",
+        color=0x193E75
+    )
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    embed.set_thumbnail(url=THUMBNAIL_URL)
+    embed.set_image(url=BANNER_URL)
+
+    for idx, log in enumerate(logs, start=1):
+        embed.add_field(
+            name=f"✈️ Flight {idx}",
+            value=(
+                f"**Code:** {log['flight_code']}\n"
+                f"**Date:** {log['timestamp']}\n"
+                f"**Logged By:** {log['logger']}\n"
+                f"[📎 Evidence]({log['evidence']})"
+            ),
+            inline=False
+        )
+
+    footer_text, _ = generate_footer()
+    embed.set_footer(text=footer_text)
+
+    await interaction.response.send_message(embed=embed, ephemeral=True)
 
 bot.run(DISCORD_TOKEN)
