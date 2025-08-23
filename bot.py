@@ -742,7 +742,7 @@ async def recruitment_day(interaction: discord.Interaction, host: str, departmen
         description=(
             f"There is currently a recruitment day for {department} scheduled.\n\n"
             f"**Host:** {host_mention}\n"
-            f"**Time:** <t:{unix_ts}:F> UTC\n\n"
+            f"**Time:** <t:{unix_ts}:F> (Converted into your timezone)\n\n"
             "- You are required to be over the age of 13\n"
             "- You agree to not leak any documents given by Ryanair RBX, doing so will result in an immediate blacklist\n"
             "- You are required to use SPaG at all times excluding the Discord Server.\n"
