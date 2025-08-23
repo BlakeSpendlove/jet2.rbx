@@ -588,35 +588,39 @@ async def flightlog_remove(interaction: discord.Interaction, user: discord.User,
     await interaction.response.send_message(f"❌ No flight log with ID `{log_id}` found for {user.mention}.", ephemeral=True)
 
 # /infractions_view command
-@bot.tree.command(name="infractions_view", description="View a user's infractions.", guild=guild)
+@bot.tree.command(name="infractions_view", description="View all infractions for a user.", guild=guild)
 @app_commands.describe(user="User to view infractions for")
 async def infractions_view(interaction: discord.Interaction, user: discord.User):
-    if not has_role(interaction, INFRACTION_VIEW_ROLE_ID):  # new role var
+    if not has_role(interaction, INFRACTION_ROLE_ID):
         await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
         return
 
-    user_infractions = infractions.get(user.id, [])
-    if not user_infractions:
-        await interaction.response.send_message(f"{user.mention} has no infractions logged.", ephemeral=True)
+    logs = infractions.get(user.id, [])
+    if not logs:
+        await interaction.response.send_message(f"ℹ️ {user.mention} has no infractions logged.", ephemeral=True)
         return
 
     embed = discord.Embed(
         title=f"{user.name} | Infractions",
         color=0xE74C3C
     )
-    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_image(url=BANNER_URL)
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
 
-    for inf in user_infractions:
+    for log in logs:
         embed.add_field(
-            name=f"🚨 {inf['type']}",
-            value=f"**Date:** {inf['timestamp']}\n**ID:** `{inf['id']}`",
+            name=f"🚨 {log['type']} | ID: {log['id']}",
+            value=(
+                f"**Reason:** {log['reason']}\n"
+                f"**Date:** {log['timestamp']}"
+            ),
             inline=False
         )
 
     footer_text, _ = generate_footer()
     embed.set_footer(text=footer_text)
+
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # /infractions_remove command
