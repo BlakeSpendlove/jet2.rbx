@@ -482,9 +482,9 @@ async def dm(interaction: discord.Interaction, user: discord.User, embed_json: s
 
     try:
         await user.send(embed=embed)
-        await interaction.response.send_message(f"Embed sent to {user.mention}.", ephemeral=True)
+        await interaction.response.send_message(f"✅ Embed sent to {user.mention}.", ephemeral=True)
     except Exception:
-        await interaction.response.send_message(f"Failed to DM {user.mention}.", ephemeral=True)
+        await interaction.response.send_message(f"❌ Failed to DM {user.mention}.", ephemeral=True)
 
 # /flightlogs_view command
 @bot.tree.command(name="flightlogs_view", description="View flight logs for a user.", guild=guild)
