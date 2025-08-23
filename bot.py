@@ -244,28 +244,40 @@ async def infraction(
         return
 
     footer_text, inf_id = generate_footer()
+    timestamp = datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC")
+
+    # --- Save infraction in memory ---
+    if user.id not in infractions:
+        infractions[user.id] = []
+    infractions[user.id].append({
+        "id": inf_id,
+        "type": type.value,
+        "reason": reason,
+        "timestamp": timestamp
+    })
 
     embed = discord.Embed(
         title="RYR RBX | Infraction Notice",
         description=(
             f"**👤 User:** {user.mention}\n"
             f"**📄 Infraction:** {type.value}\n"
-            f"**📝 Reason:** {reason}\n\n"
+            f"**📝 Reason:** {reason}\n"
+            f"**🗓️ Date:** {timestamp}\n\n"
             f"━━━━━━━━━━━━━━━━━━━━\n\n"
             f"Please acknowledge this notice and take appropriate steps.\n"
             f"Repeated infractions may lead to more severe consequences.\n\n"
             f"✈️ RYR RBX | Low fares, made simple."
         ),
-        color=0x193E75
+        color=0xE74C3C
     )
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_image(url=BANNER_URL)
     embed.set_thumbnail(url=THUMBNAIL_URL)
-    embed.set_footer(text=footer_text)
+    embed.set_footer(text=f"{footer_text} • ID: {inf_id}")
 
     channel = bot.get_channel(INFRACTION_CHANNEL_ID)
     await channel.send(content=user.mention, embed=embed)
-    await interaction.response.send_message("Infraction logged.", ephemeral=True)
+    await interaction.response.send_message(f"Infraction logged with ID `{inf_id}`.", ephemeral=True)
 
 # /promote command
 @bot.tree.command(name="promote", description="Log a promotion.", guild=guild)
