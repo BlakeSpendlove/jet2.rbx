@@ -700,29 +700,36 @@ async def infractions_remove(interaction: discord.Interaction, user: discord.Use
     await interaction.response.send_message(f"❌ No infraction with ID `{infraction_id}` found for {user.mention}.", ephemeral=True)
 
 # Recruitment day CMD
-@bot.tree.command(name="recruitment_day", description="Announce a recruitment day and create event.", guild=guild)
-@app_commands.describe(details="Format: host-department-date-time (e.g., User-Sales-23/08/2025-15:00)")
-async def recruitment_day(interaction: discord.Interaction, details: str):
+
+@bot.tree.command(name="recruitment_day", description="Announce a recruitment day and create an event.", guild=guild)
+@app_commands.describe(
+    host="Host of the recruitment day (mention user)",
+    department="Department for recruitment",
+    date="Date of the recruitment day (DD/MM/YYYY)",
+    time="Time of the recruitment day (HH:MM in UTC)"
+)
+async def recruitment_day(interaction: discord.Interaction, host: discord.User, department: str, date: str, time: str):
     if not has_role(interaction, EMBED_ROLE_ID):
         await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
         return
 
     try:
-        host, department, date_str, time_str = details.split("-")
-        start_dt = datetime.strptime(f"{date_str} {time_str}", "%d/%m/%Y %H:%M")
+        # Parse date and time
+        start_dt = datetime.strptime(f"{date} {time}", "%d/%m/%Y %H:%M")
         end_dt = start_dt + timedelta(minutes=45)
     except Exception:
-        await interaction.response.send_message("❌ Invalid format. Use host-department-date-time (23/08/2025-15:00).", ephemeral=True)
+        await interaction.response.send_message("❌ Invalid date or time format. Use DD/MM/YYYY for date and HH:MM for time (UTC).", ephemeral=True)
         return
 
     footer_text, _ = generate_footer()
     channel = bot.get_channel(RECRUITMENT_DAY_CHANNEL_ID)
 
+    # Send embed + @everyone ping
     content = "@everyone"
     embed = discord.Embed(
         title="RYR RBX | Recruitment Day",
         description=(
-            f"There is currently a recruitment day for {department} going on at {time_str} UTC on {date_str}. **Here is what you need to know:**\n\n"
+            f"There is currently a recruitment day for {department} going on at {time} UTC on {date}. **Here is what you need to know:**\n\n"
             "- You are required to be over the age of 13\n"
             "- You agree to not leak any documents given by Ryanair RBX, doing so will result in an immediate blacklist\n"
             "- You are required to use SPaG at all times excluding the Discord Server.\n"
@@ -739,13 +746,20 @@ async def recruitment_day(interaction: discord.Interaction, details: str):
 
     await channel.send(content=content, embed=embed)
 
-    # Create Discord Event
+    # Create Discord scheduled event
     guild_obj = interaction.guild
     await guild_obj.create_scheduled_event(
         name=f"{department} Recruitment Day",
         start_time=start_dt,
         end_time=end_dt,
-        description=f"Host: {host}\nDepartment: {department}\nTime: {time_str} UTC\nDate: {date_str}",
+        description=(
+            f"Host: {host.mention}\n"
+            f"Department: {department}\n"
+            f"Date: {date}\n"
+            f"Time: {time} UTC\n\n"
+            "Please follow the guidelines and join the recruitment day link below.\n"
+            f"{RECRUITMENT_URL}"
+        ),
         location=None,
         entity_type=discord.EntityType.external,
         entity_metadata={"location": RECRUITMENT_URL},
