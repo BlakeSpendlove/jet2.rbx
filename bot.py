@@ -20,6 +20,7 @@ GUILD_ID = int(os.environ['GUILD_ID'])
 
 BANNER_URL = "https://media.discordapp.net/attachments/1395760490982150194/1408148733019033712/Group_1_1.png?ex=68a8b034&is=68a75eb4&hm=98265d0ed9c9f1a5d9cf760e73170ba2a95387fd5641e0e91ccf4c18a98db54e&=&format=webp&quality=lossless&width=694&height=55"
 THUMBNAIL_URL = "https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68a87f3a&is=68a72dba&hm=fe9137a4da93d2e5557eb2fc3c5e72e363e87ba57005d317c2b09c674f0abee8&=&format=webp&quality=lossless&width=640&height=640"
+RECRUITMENT_URL = "https://media.discordapp.net/attachments/1402048522299248782/1408912811077140611/RECRUITMENT_DAY.png?ex=68ab77ce&is=68aa264e&hm=eaf745df3adb1f882895161ffa3d7a4d8347074782b3d079c9bca33af9d2d7bc&=&format=webp&quality=lossless&width=1256&height=235"
 
 EMBED_ROLE_ID = 1396992153208488057
 APP_RESULTS_ROLE_ID = 1396992153208488057
@@ -39,6 +40,7 @@ INFRACTION_CHANNEL_ID = 1398731768449994793
 PROMOTION_CHANNEL_ID = 1398731752197066953
 FLIGHT_LOG_CHANNEL_ID = 1398731789106675923
 FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516
+RECRUITMENT_DAY_CHANNEL_ID = 1397009186566438943  # replace with your channel ID
 
 guild = discord.Object(id=GUILD_ID)
 
@@ -696,5 +698,61 @@ async def infractions_remove(interaction: discord.Interaction, user: discord.Use
             return
 
     await interaction.response.send_message(f"❌ No infraction with ID `{infraction_id}` found for {user.mention}.", ephemeral=True)
+
+# Recruitment day CMD
+@bot.tree.command(name="recruitment_day", description="Announce a recruitment day and create event.", guild=guild)
+@app_commands.describe(details="Format: host-department-date-time (e.g., User-Sales-23/08/2025-15:00)")
+async def recruitment_day(interaction: discord.Interaction, details: str):
+    if not has_role(interaction, EMBED_ROLE_ID):
+        await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
+        return
+
+    try:
+        host, department, date_str, time_str = details.split("-")
+        start_dt = datetime.strptime(f"{date_str} {time_str}", "%d/%m/%Y %H:%M")
+        end_dt = start_dt + timedelta(minutes=45)
+    except Exception:
+        await interaction.response.send_message("❌ Invalid format. Use host-department-date-time (23/08/2025-15:00).", ephemeral=True)
+        return
+
+    footer_text, _ = generate_footer()
+    channel = bot.get_channel(RECRUITMENT_DAY_CHANNEL_ID)
+
+    content = "@everyone"
+    embed = discord.Embed(
+        title="RYR RBX | Recruitment Day",
+        description=(
+            f"There is currently a recruitment day for {department} going on at {time_str} UTC on {date_str}. **Here is what you need to know:**\n\n"
+            "- You are required to be over the age of 13\n"
+            "- You agree to not leak any documents given by Ryanair RBX, doing so will result in an immediate blacklist\n"
+            "- You are required to use SPaG at all times excluding the Discord Server.\n"
+            "- You are to remain professional at all times, unless having a small joke within the Staffing channels.\n\n"
+            f"For this Recruitment day, please join through the link below\n:link: {RECRUITMENT_URL}\n\n"
+            "We hope to see you there! :wave:"
+        ),
+        color=1654389
+    )
+    embed.set_author(name=f"Ryanair RBX | {department} Recruitment Day")
+    embed.set_image(url=BANNER_URL)
+    embed.set_thumbnail(url=THUMBNAIL_URL)
+    embed.set_footer(text=footer_text)
+
+    await channel.send(content=content, embed=embed)
+
+    # Create Discord Event
+    guild_obj = interaction.guild
+    await guild_obj.create_scheduled_event(
+        name=f"{department} Recruitment Day",
+        start_time=start_dt,
+        end_time=end_dt,
+        description=f"Host: {host}\nDepartment: {department}\nTime: {time_str} UTC\nDate: {date_str}",
+        location=None,
+        entity_type=discord.EntityType.external,
+        entity_metadata={"location": RECRUITMENT_URL},
+        privacy_level=discord.PrivacyLevel.guild_only,
+        image=RECRUITMENT_URL.encode() if RECRUITMENT_URL else None
+    )
+
+    await interaction.response.send_message(f"✅ Recruitment Day for {department} scheduled and announced!", ephemeral=True)
 
 bot.run(DISCORD_TOKEN)
