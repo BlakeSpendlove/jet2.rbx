@@ -700,25 +700,30 @@ async def infractions_remove(interaction: discord.Interaction, user: discord.Use
     await interaction.response.send_message(f"❌ No infraction with ID `{infraction_id}` found for {user.mention}.", ephemeral=True)
 
 # Recruitment day CMD
-
 @bot.tree.command(name="recruitment_day", description="Announce a recruitment day and create an event.", guild=guild)
 @app_commands.describe(
-    host="Host of the recruitment day (mention user)",
+    host="Host of the recruitment day (@DisplayName (@DiscordTag))",
     department="Department for recruitment",
     date="Date of the recruitment day (DD/MM/YYYY)",
     time="Time of the recruitment day (HH:MM in UTC)"
 )
-async def recruitment_day(interaction: discord.Interaction, host: discord.User, department: str, date: str, time: str):
+async def recruitment_day(interaction: discord.Interaction, host: str, department: str, date: str, time: str):
     if not has_role(interaction, EMBED_ROLE_ID):
         await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
         return
+
+    # Extract mention from input like "@DisplayName (@DiscordTag)"
+    mention_match = re.search(r"<@!?(\d+)>", host)
+    host_mention = mention_match.group(0) if mention_match else host  # fallback to raw text if no mention
 
     try:
         # Parse date and time
         start_dt = datetime.strptime(f"{date} {time}", "%d/%m/%Y %H:%M")
         end_dt = start_dt + timedelta(minutes=45)
     except Exception:
-        await interaction.response.send_message("❌ Invalid date or time format. Use DD/MM/YYYY for date and HH:MM for time (UTC).", ephemeral=True)
+        await interaction.response.send_message(
+            "❌ Invalid date or time format. Use DD/MM/YYYY for date and HH:MM (24-hour UTC).", ephemeral=True
+        )
         return
 
     footer_text, _ = generate_footer()
@@ -753,7 +758,7 @@ async def recruitment_day(interaction: discord.Interaction, host: discord.User, 
         start_time=start_dt,
         end_time=end_dt,
         description=(
-            f"Host: {host.mention}\n"
+            f"Host: {host_mention}\n"
             f"Department: {department}\n"
             f"Date: {date}\n"
             f"Time: {time} UTC\n\n"
