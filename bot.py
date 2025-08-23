@@ -31,6 +31,7 @@ FLIGHT_BRIEFING_ROLE_ID = 1397864367680127048
 LOA_APPROVER_ROLE_ID = 1396992153208488057
 LOA_ROLE_ID = 1404543704651534517
 RESULTS_ROLE_ID = 1396992201636057149  # replace with your real role ID
+FLIGHTLOG_REMOVE_ROLE_ID = 1396992153208488057
 
 INFRACTION_CHANNEL_ID = 1398731768449994793
 PROMOTION_CHANNEL_ID = 1398731752197066953
@@ -540,5 +541,46 @@ async def flightlogs_view(interaction: discord.Interaction, user: discord.User):
     embed.set_footer(text=f"{footer_text} • Showing {len(logs)} logs")
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
+
+# /flightlog_remove command
+@bot.tree.command(name="flightlog_remove", description="Remove a flight log by its ID.", guild=guild)
+@app_commands.describe(user="User to remove a log from", log_id="The ID of the flight log to remove")
+async def flightlog_remove(interaction: discord.Interaction, user: discord.User, log_id: str):
+    if not has_role(interaction, FLIGHTLOG_REMOVE_ROLE_ID):
+        await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
+        return
+
+    logs = flight_logs.get(user.id, [])
+    if not logs:
+        await interaction.response.send_message(f"No flight logs found for {user.mention}.", ephemeral=True)
+        return
+
+    # Try to find the log with matching ID
+    for log in logs:
+        if log["log_id"].upper() == log_id.upper():
+            logs.remove(log)
+            footer_text, _ = generate_footer()
+
+            embed = discord.Embed(
+                title="✈️ RYR RBX | Flight Log Removed",
+                description=(
+                    f"**User:** {user.mention}\n"
+                    f"**Removed Log ID:** `{log_id}`\n"
+                    f"**Flight Code:** {log['flight_code']}\n"
+                    f"**Date:** {log['timestamp']}\n\n"
+                    f"✅ This log has been removed from records."
+                ),
+                color=0xE74C3C
+            )
+            embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+            embed.set_thumbnail(url=THUMBNAIL_URL)
+            embed.set_image(url=BANNER_URL)
+            embed.set_footer(text=footer_text)
+
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
+
+    # If not found
+    await interaction.response.send_message(f"❌ No flight log with ID `{log_id}` found for {user.mention}.", ephemeral=True)
 
 bot.run(DISCORD_TOKEN)
