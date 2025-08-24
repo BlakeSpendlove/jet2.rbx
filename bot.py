@@ -37,6 +37,7 @@ RESULTS_ROLE_ID = 1396992201636057149  # replace with your real role ID
 FLIGHTLOG_REMOVE_ROLE_ID = 1396992153208488057
 INFRACTION_VIEW_ROLE_ID = 1396992201636057149
 INFRACTION_REMOVE_ROLE_ID = 1396992153208488057
+RECRUITMENT_DAY_ROLE_ID = 1396992201636057149  # Replace with your actual role ID
 
 INFRACTION_CHANNEL_ID = 1398731768449994793
 PROMOTION_CHANNEL_ID = 1398731752197066953
@@ -701,8 +702,13 @@ async def infractions_remove(interaction: discord.Interaction, user: discord.Use
 
     await interaction.response.send_message(f"❌ No infraction with ID `{infraction_id}` found for {user.mention}.", ephemeral=True)
 
-# Recruitment day CMD (Embed + Discord Event)
-@bot.tree.command(name="recruitment_day", description="Announce a recruitment day and create an event.", guild=guild)
+
+# Recruitment Day CMD
+@bot.tree.command(
+    name="recruitment_day",
+    description="Announce a recruitment day and create an event.",
+    guild=guild
+)
 @app_commands.describe(
     host="Host of the recruitment day (@DisplayName (@DiscordTag))",
     department="Department for recruitment",
@@ -710,9 +716,19 @@ async def infractions_remove(interaction: discord.Interaction, user: discord.Use
     time="Time of the recruitment day (HH:MM in UTC)",
     game_link="Link to the recruitment day session/game"
 )
-async def recruitment_day(interaction: discord.Interaction, host: str, department: str, date: str, time: str, game_link: str):
-    if not has_role(interaction, EMBED_ROLE_ID):
-        await interaction.response.send_message("❌ You do not have permission to use this command.", ephemeral=True)
+async def recruitment_day(
+    interaction: discord.Interaction,
+    host: str,
+    department: str,
+    date: str,
+    time: str,
+    game_link: str
+):
+    # Whitelist check
+    if not any(role.id == RECRUITMENT_DAY_ROLE_ID for role in interaction.user.roles):
+        await interaction.response.send_message(
+            "❌ You do not have permission to use this command.", ephemeral=True
+        )
         return
 
     import re
@@ -780,6 +796,9 @@ async def recruitment_day(interaction: discord.Interaction, host: str, departmen
         image=RECRUITMENT_URL.encode() if RECRUITMENT_URL else None
     )
 
-    await interaction.response.send_message(f"✅ Recruitment Day for {department} announced and event created!", ephemeral=True)
+    await interaction.response.send_message(
+        f"✅ Recruitment Day for {department} announced and event created!",
+        ephemeral=True
+    )
 
 bot.run(DISCORD_TOKEN)
