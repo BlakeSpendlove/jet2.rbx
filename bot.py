@@ -336,12 +336,6 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
 
     footer_text, _ = generate_footer()
 
-    # Embed 1 (top banner image)
-    embed1 = discord.Embed(color=1062512)
-    embed1.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410396166616645782/Group_9.png?ex=68b0dd4a&is=68af8bca&hm=1b9aec4330f08373287c3fe6d344083586db1c53e6c3705b49522a0f570f667e&=&format=webp&quality=lossless&width=1245&height=235")
-    embed1.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-    embed1.set_footer(text=footer_text)
-
     # Embed 2 (promotion details)
     embed2 = discord.Embed(
         description=(
