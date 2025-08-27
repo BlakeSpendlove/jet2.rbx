@@ -336,41 +336,42 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
 
     footer_text, _ = generate_footer()
 
-    # Public announcement embed
-    announce_embed = discord.Embed(
-        title="RYR RBX | Promotion Notice",
+    # Embed 1 (top banner image)
+    embed1 = discord.Embed(color=1062512)
+    embed1.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410394008785522861/promotion.png?ex=68b0db47&is=68af89c7&hm=81a051e8d34447c71710307121feaffa3d68c64bda737d6900f3bee5ad78aeae&=&format=webp&quality=lossless&width=1224&height=235")
+    embed1.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    embed1.set_footer(text=footer_text)
+
+    # Embed 2 (promotion details)
+    embed2 = discord.Embed(
         description=(
-            f"**👤 Staff Member:** {user.mention}\n"
-            f"**⬆️ New Rank:** {promotion_to}\n"
-            f"**📝 Reason for Promotion:**\n{reason}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"Please join us in congratulating them.\n\n"
-            f"✈️ RYR RBX | Low fares, made simple"
+            f"**Promoted Member:**\n{user.mention}\n\n"
+            f"**Promotion to:**\n{promotion_to}\n\n"
+            f"**Reason:**\n{reason}"
         ),
-        color=0x193E75
+        color=1062512
     )
-    announce_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-    announce_embed.set_image(url=BANNER_URL)
-    announce_embed.set_thumbnail(url=THUMBNAIL_URL)
-    announce_embed.set_footer(text=footer_text)
+    embed2.set_author(name="Ryanair RBX | Staff Member Promotion 🎉", icon_url=interaction.user.display_avatar.url)
+    embed2.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410389659795587192/Group_5.png?ex=68b0d73a&is=68af85ba&hm=94af336fabeb2377e6113cc3f25a1d4fef1294e2e8ec74987d4820bd3bda1bd3&=&format=webp&quality=lossless&width=614&height=76")
+    embed2.set_footer(text=footer_text)
 
+    # Send in promotion channel
     channel = bot.get_channel(PROMOTION_CHANNEL_ID)
-    await channel.send(content=user.mention, embed=announce_embed)
+    await channel.send(content=user.mention, embeds=[embed1, embed2])
 
-    # DM embed (pure Discohook JSON style)
+    # DM embed (same style as before)
     dm_embed = discord.Embed(
         description=(
-            f"Hey! Congratulations on your recent promotion to **{promotion_to}**!! 🎉. "
-            f"You was promoted by {interaction.user.mention}, if you have any questions regarding your new role, "
-            f"please DM that user. You was promoted because **{reason}**.\n\n"
+            f"Hey! Congratulations on your recent promotion to **{promotion_to}**!! 🎉\n\n"
+            f"You were promoted by {interaction.user.mention}. If you have any questions regarding your new role, "
+            f"please DM them directly.\n\n"
+            f"You were promoted because **{reason}**.\n\n"
             f"Once again, congratulations and thank you for your dedication to Ryanair RBX. 🥳"
         ),
-        color=1062512  # exact color from JSON
+        color=1062512
     )
-    dm_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-    dm_embed.set_author(name="Promotion Notice 🥳")
-    dm_embed.set_thumbnail(url=THUMBNAIL_URL)
-    dm_embed.set_image(url=INFRACTIONSLOGS_URL)
+    dm_embed.set_author(name="Promotion Notice 🥳", icon_url=interaction.user.display_avatar.url)
+    dm_embed.set_footer(text=footer_text)
 
     try:
         await user.send(embed=dm_embed)
