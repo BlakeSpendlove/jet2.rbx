@@ -261,6 +261,7 @@ async def infraction(
         "timestamp": timestamp
     })
 
+    # --- Public log embed ---
     embed = discord.Embed(
         title="RYR RBX | Infraction Notice",
         description=(
@@ -282,6 +283,30 @@ async def infraction(
 
     channel = bot.get_channel(INFRACTION_CHANNEL_ID)
     await channel.send(content=user.mention, embed=embed)
+
+    # --- DM the user with Discohook-style embed ---
+    dm_embed = discord.Embed(
+        description=(
+            f"Hey! This is a quick DM to give you your next steps following your recent infraction. "
+            f"You were infracted by **{interaction.user}**. "
+            f"This is due to **{reason}**. "
+            f"This has been logged as a **{type.value}**.\n\n"
+            f"If you wish to appeal this consequence, please open a ticket and state your reason for appeal, "
+            f"along with the message link."
+        ),
+        color=0x103C70  # close to #193E75
+    )
+    dm_embed.set_author(name="Infraction Notice")
+    dm_embed.set_image(url=BANNER_URL)
+    dm_embed.set_thumbnail(url=THUMBNAIL_URL)
+
+    try:
+        await user.send(embed=dm_embed)
+    except discord.Forbidden:
+        await interaction.followup.send(
+            f"⚠️ Could not DM {user.mention} (they may have DMs disabled).", ephemeral=True
+        )
+
     await interaction.response.send_message(f"Infraction logged with ID `{inf_id}`.", ephemeral=True)
 
 # /promote command
