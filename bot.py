@@ -21,6 +21,7 @@ DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 GUILD_ID = int(os.environ['GUILD_ID'])
 
 BANNER_URL = "https://media.discordapp.net/attachments/1395760490982150194/1408148733019033712/Group_1_1.png?ex=68a8b034&is=68a75eb4&hm=98265d0ed9c9f1a5d9cf760e73170ba2a95387fd5641e0e91ccf4c18a98db54e&=&format=webp&quality=lossless&width=694&height=55"
+INFRACTIONSLOGS_URL = "https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b0d9aa&is=68af882a&hm=83c7ddb79dfa6ee1026183e8e2dfcf15c9f8570b3813015b637a7b3edea4cabe&=&format=webp&quality=lossless&width=614&height=76"
 THUMBNAIL_URL = "https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68a87f3a&is=68a72dba&hm=fe9137a4da93d2e5557eb2fc3c5e72e363e87ba57005d317c2b09c674f0abee8&=&format=webp&quality=lossless&width=640&height=640"
 RECRUITMENT_URL = "https://media.discordapp.net/attachments/1402048522299248782/1408912811077140611/RECRUITMENT_DAY.png?ex=68ab77ce&is=68aa264e&hm=eaf745df3adb1f882895161ffa3d7a4d8347074782b3d079c9bca33af9d2d7bc&=&format=webp&quality=lossless&width=1256&height=235"
 
@@ -293,7 +294,7 @@ async def infraction(
         color=0x193E75
     )
     embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-    embed.set_image(url=BANNER_URL)
+    embed.set_image(url=INFRACTIONSLOGS_URL)
     embed.set_thumbnail(url=THUMBNAIL_URL)
     embed.set_footer(text=f"{footer_text} • ID: {inf_id}")
 
@@ -313,7 +314,7 @@ async def infraction(
         color=0x103C70  # close to #193E75
     )
     dm_embed.set_author(name="Infraction Notice")
-    dm_embed.set_image(url=BANNER_URL)
+    dm_embed.set_image(url=INFRACTIONSLOGS_URL)
     dm_embed.set_thumbnail(url=THUMBNAIL_URL)
 
     try:
@@ -369,7 +370,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     dm_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     dm_embed.set_author(name="Promotion Notice 🥳")
     dm_embed.set_thumbnail(url=THUMBNAIL_URL)
-    dm_embed.set_image(url=BANNER_URL)
+    dm_embed.set_image(url=INFRACTIONSLOGS_URL)
 
     try:
         await user.send(embed=dm_embed)
