@@ -288,7 +288,7 @@ async def infraction(
     dm_embed = discord.Embed(
         description=(
             f"Hey! This is a quick DM to give you your next steps following your recent infraction. "
-            f"You were infracted by **{interaction.user}**. "
+            f"You were infracted by **{interaction.user.mention}**. "
             f"This is due to **{reason}**. "
             f"This has been logged as a **{type.value}**.\n\n"
             f"If you wish to appeal this consequence, please open a ticket and state your reason for appeal, "
@@ -319,7 +319,8 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
 
     footer_text, _ = generate_footer()
 
-    embed = discord.Embed(
+    # Public announcement embed
+    announce_embed = discord.Embed(
         title="RYR RBX | Promotion Notice",
         description=(
             f"**👤 Staff Member:** {user.mention}\n"
@@ -331,14 +332,39 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         ),
         color=0x193E75
     )
-    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-    embed.set_image(url=BANNER_URL)
-    embed.set_thumbnail(url=THUMBNAIL_URL)
-    embed.set_footer(text=footer_text)
+    announce_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    announce_embed.set_image(url=BANNER_URL)
+    announce_embed.set_thumbnail(url=THUMBNAIL_URL)
+    announce_embed.set_footer(text=footer_text)
 
     channel = bot.get_channel(PROMOTION_CHANNEL_ID)
-    await channel.send(content=user.mention, embed=embed)
-    await interaction.response.send_message("Promotion logged.", ephemeral=True)
+    await channel.send(content=user.mention, embed=announce_embed)
+
+    # DM embed (pure Discohook JSON style)
+    dm_embed = discord.Embed(
+        description=(
+            f"Hey! Congratulations on your recent promotion to {promotion_to}!! 🎉. "
+            f"You was promoted by {interaction.user.mention}, if you have any questions regarding your new role, "
+            f"please DM that user. You was promoted because {reason}.\n\n"
+            f"Once again, congratulations and thank you for your dedication to Ryanair RBX. 🥳"
+        ),
+        color=1062512  # exact color from JSON
+    )
+    dm_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    dm_embed.set_author(name="Promotion Notice 🥳")
+    dm_embed.set_thumbnail(url=THUMBNAIL_URL)
+    dm_embed.set_image(url=BANNER_URL)
+
+    try:
+        await user.send(embed=dm_embed)
+    except discord.Forbidden:
+        await interaction.response.send_message(
+            "Promotion logged, but I couldn't DM the user (their DMs might be closed).",
+            ephemeral=True
+        )
+        return
+
+    await interaction.response.send_message("Promotion logged and DM sent.", ephemeral=True)
 
 # LOA Request Command
 @bot.tree.command(name="loa_request", description="Request a leave of absence.", guild=guild)
