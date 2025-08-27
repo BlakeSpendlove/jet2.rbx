@@ -338,7 +338,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
 
     # Embed 1 (top banner image)
     embed1 = discord.Embed(color=1062512)
-    embed1.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410394008785522861/promotion.png?ex=68b0db47&is=68af89c7&hm=81a051e8d34447c71710307121feaffa3d68c64bda737d6900f3bee5ad78aeae&=&format=webp&quality=lossless&width=1224&height=235")
+    embed1.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410396166616645782/Group_9.png?ex=68b0dd4a&is=68af8bca&hm=1b9aec4330f08373287c3fe6d344083586db1c53e6c3705b49522a0f570f667e&=&format=webp&quality=lossless&width=1245&height=235")
     embed1.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed1.set_footer(text=footer_text)
 
@@ -352,7 +352,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         color=1062512
     )
     embed2.set_author(name="Ryanair RBX | Staff Member Promotion 🎉", icon_url=interaction.user.display_avatar.url)
-    embed2.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410389659795587192/Group_5.png?ex=68b0d73a&is=68af85ba&hm=94af336fabeb2377e6113cc3f25a1d4fef1294e2e8ec74987d4820bd3bda1bd3&=&format=webp&quality=lossless&width=614&height=76")
+    embed2.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b0d9aa&is=68af882a&hm=83c7ddb79dfa6ee1026183e8e2dfcf15c9f8570b3813015b637a7b3edea4cabe&=&format=webp&quality=lossless&width=614&height=76")
     embed2.set_footer(text=footer_text)
 
     # Send in promotion channel
