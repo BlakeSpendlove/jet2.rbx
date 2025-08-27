@@ -343,9 +343,9 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     # DM embed (pure Discohook JSON style)
     dm_embed = discord.Embed(
         description=(
-            f"Hey! Congratulations on your recent promotion to {promotion_to}!! 🎉. "
+            f"Hey! Congratulations on your recent promotion to **{promotion_to}**!! 🎉. "
             f"You was promoted by {interaction.user.mention}, if you have any questions regarding your new role, "
-            f"please DM that user. You was promoted because {reason}.\n\n"
+            f"please DM that user. You was promoted because **{reason}**.\n\n"
             f"Once again, congratulations and thank you for your dedication to Ryanair RBX. 🥳"
         ),
         color=1062512  # exact color from JSON
