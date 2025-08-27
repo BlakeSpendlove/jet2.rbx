@@ -139,7 +139,7 @@ async def app_results(
     except Exception:
         await interaction.response.send_message(f"Failed to send DM to {user.mention}.", ephemeral=True)
 
-# Flight briefing command
+# Flight briefing cmd
 @bot.tree.command(name="flight_briefing", description="Send a flight briefing.", guild=guild)
 @app_commands.describe(flight_code="Flight code", game_link="Link to the flight simulation game", vc_link="Link to voice chat")
 async def flight_briefing(interaction: discord.Interaction, flight_code: str, game_link: str, vc_link: str):
@@ -153,35 +153,51 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
 
     footer_text, _ = generate_footer()
 
-    await interaction.channel.send("@everyone")
-    
-    embed = discord.Embed(
-        title=f"RYR RBX | Flight Briefing — {flight_code}",
-        description=(
-            f"@everyone\n\n"
-            f"✈️ **Flight Code:** {flight_code}\n"
-            f"👤 **Host:** {interaction.user.mention}\n\n"
-            f"Welcome to your flight briefing.\n\n"
-            f"Please review all details carefully and join the links below at the scheduled time.\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"**✈️ Game Link:** [Click Here]({game_link})  \n"
-            f"**📞 Voice Chat:** [Join Here]({vc_link})\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"Low fares, made simple."
-        ),
-        color=0x193E75
-    )
-    embed.set_image(url=BANNER_URL)
-    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-    embed.set_footer(text=footer_text)
+    # Embed 1 (top banner image)
+    embed1 = discord.Embed(color=1062512)
+    embed1.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410389210447478855/Group_4.png?ex=68b0d6cf&is=68af854f&hm=0988a584d51d48190a6ed8e1ee4843b35ed4f94d61aeed3a110462b9a2ebf118&=&format=webp&quality=lossless&width=1256&height=235")
+    embed1.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    embed1.set_footer(text=footer_text)
 
+    # Embed 2 (main briefing)
+    embed2 = discord.Embed(
+        description=(
+            f"Dear staff, you are now invited to join flight **{flight_code}**. "
+            f"If you can't attend this flight and reacted green, please tell the Flight Host.\n\n"
+            f"**Host:** {interaction.user.mention}\n"
+            f"**Game Link:** {game_link}\n"
+            f"**Briefing VC:** {vc_link}\n\n"
+            f"If you reacted green on the flight roster and not joined by **XX:30 (the next hour)** "
+            f"then an infraction may be issued."
+        ),
+        color=1062512
+    )
+    embed2.set_author(name=f"FLIGHT {flight_code} BRIEFING", icon_url=interaction.user.display_avatar.url)
+    embed2.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410389659795587192/Group_5.png?ex=68b0d73a&is=68af85ba&hm=94af336fabeb2377e6113cc3f25a1d4fef1294e2e8ec74987d4820bd3bda1bd3&=&format=webp&quality=lossless&width=614&height=76")
+    embed2.set_footer(text=footer_text)
+
+    # Professional button view
     class BriefingView(discord.ui.View):
         def __init__(self):
-            super().__init__()
-            self.add_item(discord.ui.Button(label="Game Link", url=game_link))
-            self.add_item(discord.ui.Button(label="Voice Chat", url=vc_link))
+            super().__init__(timeout=None)
+            self.add_item(discord.ui.Button(
+                label="✈️ Join Game", 
+                style=discord.ButtonStyle.link, 
+                url=game_link
+            ))
+            self.add_item(discord.ui.Button(
+                label="🎙️ Join Briefing VC", 
+                style=discord.ButtonStyle.link, 
+                url=vc_link
+            ))
 
-    await interaction.channel.send(embed=embed, view=BriefingView())
+    # Send the message
+    await interaction.channel.send(
+        content="@everyone",
+        embeds=[embed1, embed2],
+        view=BriefingView()
+    )
+
     await interaction.response.send_message("Flight briefing sent!", ephemeral=True)
 
 # /flight_log command
