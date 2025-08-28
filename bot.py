@@ -345,7 +345,8 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         ),
         color=1062512
     )
-    embed.set_author(name="Ryanair RBX | Staff Member Promotion 🎉", icon_url=interaction.user.display_avatar.url)
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    embed.set_author(name="Ryanair RBX | Staff Member Promotion 🎉")
     embed.set_image(
         url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b0d9aa&is=68af882a&hm=83c7ddb79dfa6ee1026183e8e2dfcf15c9f8570b3813015b637a7b3edea4cabe&=&format=webp&quality=lossless&width=614&height=76"
     )
@@ -366,7 +367,8 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         ),
         color=1062512
     )
-    dm_embed.set_author(name="Promotion Notice 🥳", icon_url=interaction.user.display_avatar.url)
+    dm_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    dm_embed.set_author(name="Promotion Notice 🥳")
     dm_embed.set_image(
         url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b0d9aa&is=68af882a&hm=83c7ddb79dfa6ee1026183e8e2dfcf15c9f8570b3813015b637a7b3edea4cabe&=&format=webp&quality=lossless&width=614&height=76"
     )
