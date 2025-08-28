@@ -336,7 +336,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
 
     footer_text, _ = generate_footer()
 
-    # Single promotion embed (with details + bottom banner image)
+    # Promotion embed (public announcement)
     embed = discord.Embed(
         description=(
             f"**Promoted Member:**\n{user.mention}\n\n"
@@ -347,7 +347,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     )
     embed.set_author(name="Ryanair RBX | Staff Member Promotion 🎉", icon_url=interaction.user.display_avatar.url)
     embed.set_image(
-        url="https://media.discordapp.net/attachments/1395760490982150194/1410389659795587192/Group_5.png?ex=68b0d73a&is=68af85ba&hm=94af336fabeb2377e6113cc3f25a1d4fef1294e2e8ec74987d4820bd3bda1bd3&=&format=webp&quality=lossless&width=614&height=76"
+        url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b0d9aa&is=68af882a&hm=83c7ddb79dfa6ee1026183e8e2dfcf15c9f8570b3813015b637a7b3edea4cabe&=&format=webp&quality=lossless&width=614&height=76"
     )
     embed.set_footer(text=footer_text)
 
@@ -367,6 +367,9 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         color=1062512
     )
     dm_embed.set_author(name="Promotion Notice 🥳", icon_url=interaction.user.display_avatar.url)
+    dm_embed.set_image(
+        url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b0d9aa&is=68af882a&hm=83c7ddb79dfa6ee1026183e8e2dfcf15c9f8570b3813015b637a7b3edea4cabe&=&format=webp&quality=lossless&width=614&height=76"
+    )
     dm_embed.set_footer(text=footer_text)
 
     try:
