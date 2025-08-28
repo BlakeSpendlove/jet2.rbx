@@ -326,7 +326,7 @@ async def infraction(
 
     await interaction.response.send_message(f"Infraction logged with ID `{inf_id}`.", ephemeral=True)
 
-# /promote command
+# Promote command
 @bot.tree.command(name="promote", description="Log a promotion.", guild=guild)
 @app_commands.describe(user="User promoted", promotion_to="New rank", reason="Reason for promotion")
 async def promote(interaction: discord.Interaction, user: discord.User, promotion_to: str, reason: str):
@@ -335,6 +335,12 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         return
 
     footer_text, _ = generate_footer()
+
+    # Embed 1 (header image)
+    embed1 = discord.Embed(color=1062512)
+    embed1.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410394008785522861/promotion.png?ex=68b0db47&is=68af89c7&hm=81a051e8d34447c71710307121feaffa3d68c64bda737d6900f3bee5ad78aeae&=&format=webp&quality=lossless&width=1224&height=235")
+    embed1.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    embed1.set_footer(text=footer_text)
 
     # Embed 2 (promotion details)
     embed2 = discord.Embed(
@@ -345,30 +351,17 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         ),
         color=1062512
     )
-    embed2.set_author(name="Ryanair RBX | Staff Member Promotion 🎉", icon_url=interaction.user.display_avatar.url)
-    embed2.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b0d9aa&is=68af882a&hm=83c7ddb79dfa6ee1026183e8e2dfcf15c9f8570b3813015b637a7b3edea4cabe&=&format=webp&quality=lossless&width=614&height=76")
+    embed2.set_author(name="Ryanair RBX | Staff Member Promotion 🎉")
+    embed2.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410389659795587192/Group_5.png?ex=68b0d73a&is=68af85ba&hm=94af336fabeb2377e6113cc3f25a1d4fef1294e2e8ec74987d4820bd3bda1bd3&=&format=webp&quality=lossless&width=614&height=76")
     embed2.set_footer(text=footer_text)
 
-    # Send in promotion channel
+    # Send to promotion channel
     channel = bot.get_channel(PROMOTION_CHANNEL_ID)
     await channel.send(content=user.mention, embeds=[embed1, embed2])
 
-    # DM embed (same style as before)
-    dm_embed = discord.Embed(
-        description=(
-            f"Hey! Congratulations on your recent promotion to **{promotion_to}**!! 🎉\n\n"
-            f"You were promoted by {interaction.user.mention}. If you have any questions regarding your new role, "
-            f"please DM them directly.\n\n"
-            f"You were promoted because **{reason}**.\n\n"
-            f"Once again, congratulations and thank you for your dedication to Ryanair RBX. 🥳"
-        ),
-        color=1062512
-    )
-    dm_embed.set_author(name="Promotion Notice 🥳", icon_url=interaction.user.display_avatar.url)
-    dm_embed.set_footer(text=footer_text)
-
+    # DM the user the same embeds
     try:
-        await user.send(embed=dm_embed)
+        await user.send(embeds=[embed1, embed2])
     except discord.Forbidden:
         await interaction.response.send_message(
             "Promotion logged, but I couldn't DM the user (their DMs might be closed).",
