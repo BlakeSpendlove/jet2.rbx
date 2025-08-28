@@ -337,16 +337,6 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
     footer_text, _ = generate_footer()
 
     # Promotion embed (public announcement)
-@bot.tree.command(name="promote", description="Log a promotion.", guild=guild)
-@app_commands.describe(user="User promoted", promotion_to="New rank", reason="Reason for promotion")
-async def promote(interaction: discord.Interaction, user: discord.User, promotion_to: str, reason: str):
-    if not has_role(interaction, PROMOTION_ROLE_ID):
-        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
-        return
-
-    footer_text, _ = generate_footer()
-
-    # Single promotion embed (with details + bottom banner image)
     embed = discord.Embed(
         description=(
             f"**Promoted Member:**\n{user.mention}\n\n"
@@ -355,7 +345,10 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         ),
         color=1062512
     )
-    embed.set_author(name="Ryanair RBX | Staff Member Promotion 🎉", icon_url=interaction.user.display_avatar.url)
+    embed.set_author(name=f"{interaction.user}", icon_url=interaction.user.display_avatar.url)
+    embed.set_thumbnail(
+        url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68b110fa&is=68afbf7a&hm=9232e8d9e7190cda8f8498d2b3af8013561c09f2f75de7dbc23f9c785a28711b&=&format=webp&quality=lossless&width=640&height=640"
+    )
     embed.set_image(
         url="https://media.discordapp.net/attachments/1395760490982150194/1410389659795587192/Group_5.png?ex=68b0d73a&is=68af85ba&hm=94af336fabeb2377e6113cc3f25a1d4fef1294e2e8ec74987d4820bd3bda1bd3&=&format=webp&quality=lossless&width=614&height=76"
     )
@@ -376,7 +369,10 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         ),
         color=1062512
     )
-    dm_embed.set_author(name="Promotion Notice 🥳", icon_url=interaction.user.display_avatar.url)(name=str(interaction.user)
+    dm_embed.set_author(name=f"{interaction.user}", icon_url=interaction.user.display_avatar.url)
+    dm_embed.set_thumbnail(
+        url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68b110fa&is=68afbf7a&hm=9232e8d9e7190cda8f8498d2b3af8013561c09f2f75de7dbc23f9c785a28711b&=&format=webp&quality=lossless&width=640&height=640"
+    )
     dm_embed.set_footer(text=footer_text)
 
     try:
