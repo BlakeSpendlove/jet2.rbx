@@ -338,10 +338,11 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
 
     # Promotion embed (public announcement)
     embed = discord.Embed(
+        title="Promotion Notice 🥳",
         description=(
-            f"**Promoted Member:**\n{user.mention}\n\n"
-            f"**Promotion to:**\n{promotion_to}\n\n"
-            f"**Reason:**\n{reason}"
+            f"**Promoted Staff Member:** {user.mention}\n"
+            f"**Promotion to:** {promotion_to}\n"
+            f"**Reason:** {reason}"
         ),
         color=1062512
     )
@@ -360,6 +361,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
 
     # DM embed (congratulations message)
     dm_embed = discord.Embed(
+        title="Promotion Notice 🥳",
         description=(
             f"Hey! Congratulations on your recent promotion to **{promotion_to}**!! 🎉\n\n"
             f"You were promoted by {interaction.user.mention}. If you have any questions regarding your new role, "
