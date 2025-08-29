@@ -11,11 +11,11 @@ from discord import app_commands
 from utils import generate_footer
 
 intents = discord.Intents.default()
-intents.presences = True   # 👈 required for watching/playing/listening status
+intents.presences = True
 intents.guilds = True
 intents.members = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix='/', intents=intents)  # Use your preferred prefix here
 
 DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 GUILD_ID = int(os.environ['GUILD_ID'])
@@ -45,8 +45,6 @@ PROMOTION_CHANNEL_ID = 1398731752197066953
 FLIGHT_LOG_CHANNEL_ID = 1398731789106675923
 FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516
 RECRUITMENT_DAY_CHANNEL_ID = 1397009186566438943  # replace with your channel ID
-
-bot = commands.Bot(command_prefix='/')  # change prefix if needed
 
 guild = discord.Object(id=GUILD_ID)
 
