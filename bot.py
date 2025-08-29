@@ -54,17 +54,23 @@ infractions = {}
 
 @bot.event
 async def on_ready():
-    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
+    status_cycle.start()  # Start the loop
+    print("Status rotation started!")
 
-    activity = discord.Activity(
-        type=discord.ActivityType.watching,
-        name="RYR Infractions"
-    )
-    await bot.change_presence(activity=activity)
-    print("Status set to 'Watching RYR Infractions'")
+# Task to cycle statuses every 60 seconds
+@tasks.loop(seconds=60)
+async def status_cycle():
+    statuses = [
+        discord.Game(name="Pafos Airport"),                      # Playing
+        discord.Activity(type=discord.ActivityType.listening, name="Staff Apps"),  # Listening
+        discord.Activity(type=discord.ActivityType.watching, name="RYR Infractions")  # Watching
+    ]
 
-    # Sync commands
-    await bot.tree.sync(guild=guild)
+    # Pick a random status from the list
+    new_status = random.choice(statuses)
+    await bot.change_presence(activity=new_status)
+    print(f"Status updated to: {new_status}")
 
 def has_role(interaction: discord.Interaction, role_id: int) -> bool:
     return any(role.id == role_id for role in interaction.user.roles)
