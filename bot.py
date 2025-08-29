@@ -114,11 +114,15 @@ async def embed(interaction: discord.Interaction, embed_json: str):
     await interaction.response.send_message("Embed sent!", ephemeral=True)
 
 # Application result command
-@bot.tree.command(name="app_results", description="Send application result to user.", guild=guild)
+@bot.tree.command(
+    name="app_results",
+    description="Send application result to user.",
+    guild=discord.Object(id=GUILD_ID)
+)
 @app_commands.describe(
     user="User to DM",
     result="Pass or Fail",
-    department="Department of application",
+    department="Department applied for",
     reason="Reason for result"
 )
 @app_commands.choices(result=[
@@ -133,48 +137,58 @@ async def app_results(
     reason: str
 ):
     if not has_role(interaction, APP_RESULTS_ROLE_ID):
-        await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
+        await interaction.response.send_message(
+            "You do not have permission to use this command.",
+            ephemeral=True
+        )
         return
 
-    result_value = result.value.lower()  # "passed" or "failed"
-    runner_name = str(interaction.user)
+    # Discohook embed template
+    description_text = (
+        f"Hello {user.mention},\n\n"
+        f"We thank you for applying for Ryanair RBX. This is a short message to inform you that you have **{result.name}** your **{department}** application.\n\n"
+        f"**Feedback:**\n{reason}\n\n"
+    )
 
-    # Discohook embed template for passed
-    if result_value == "passed":
-        description = (
-            f"Hello {user.mention},\n\n"
-            f"We thank you for applying for Ryanair RBX. This is a short message to inform you that you have **Passed** your **{department}** application.\n\n"
-            f"**Feedback:**\n{reason}\n\n"
-            f"Please read over all the given information in SEP Information and complete your training from there.\n\n"
-            f"> Please do note:\n"
-            f"- You have 8 days to complete your SEP Training.\n"
-            f"- You have 4 days after your SEP Training to complete your designated department training.\n\n"
-            f"**Kind regards,**\n*{runner_name}*"
+    if result.value == "Passed":
+        description_text += (
+            "Please read over all the given information in SEP Information and complete your training from there.\n\n"
+            "> Please do note:\n"
+            "- You have 8 days to complete your SEP Training.\n"
+            "- You have 4 days after your SEP Training to complete your designated department training.\n\n"
         )
     else:  # Failed
-        description = (
-            f"Hello {user.mention},\n\n"
-            f"We thank you for applying for Ryanair RBX. This is a short message to inform you that you have **Failed** your **{department}** application.\n\n"
-            f"**Feedback:**\n{reason}\n\n"
-            f"We strongly suggest reading the questions carefully and adding lots of detail into your application.\n\n"
-            f"> Please do note:\n"
-            f"- You can re-apply at anytime, and we wish you the best of luck if you do so.\n\n"
-            f"**Kind regards,**\n*{runner_name}*"
+        description_text += (
+            "We strongly suggest reading the questions carefully and adding lots of detail into your application.\n\n"
+            "> Please do note:\n"
+            "- You can re-apply at anytime, and we wish you the best of luck if you do so.\n\n"
         )
 
+    description_text += f"**Kind regards,**\n*{interaction.user}*"
+
     embed = discord.Embed(
-        description=description,
-        color=0xE30421  # you can keep 931961 (hex 0xE30421) for Ryanair red
+        description=description_text,
+        color=0xE2061C  # Matches Discohook red
     )
-    embed.set_author(name="Ryanair RBX | Application Update")
-    embed.set_thumbnail(url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png")
-    embed.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png")
-    
+    embed.set_author(
+        name="Ryanair RBX | Application Update",
+        icon_url=interaction.user.display_avatar.url
+    )
+    if BANNER_URL:
+        embed.set_image(url=BANNER_URL)
+    embed.set_thumbnail(url=THUMBNAIL_URL)
+
     try:
         await user.send(embed=embed)
-        await interaction.response.send_message(f"✅ Application result sent to {user.mention}.", ephemeral=True)
+        await interaction.response.send_message(
+            f"Application result sent to {user.mention}.",
+            ephemeral=True
+        )
     except Exception:
-        await interaction.response.send_message(f"❌ Failed to send DM to {user.mention}.", ephemeral=True)
+        await interaction.response.send_message(
+            f"Failed to send DM to {user.mention}.",
+            ephemeral=True
+        )
 
 # Flight briefing cmd
 @bot.tree.command(name="flight_briefing", description="Send a flight briefing.", guild=guild)
