@@ -54,13 +54,18 @@ infractions = {}
 
 @bot.event
 async def on_ready():
+    # Sync commands
+    await bot.tree.sync(guild=guild)
+
+    # Set presence
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
             name="RYR Infractions"
         )
     )
-    print(f"✅ Logged in as {bot.user}")
+
+    print(f"✅ Logged in as {bot.user} (ID: {bot.user.id})")
     
 @bot.event
 async def on_ready():
