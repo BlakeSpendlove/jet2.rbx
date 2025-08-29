@@ -113,12 +113,12 @@ async def embed(interaction: discord.Interaction, embed_json: str):
     await interaction.channel.send(embed=embed)
     await interaction.response.send_message("Embed sent!", ephemeral=True)
 
-# Application result command with department prompt and separate embeds
+# Application result command
 @bot.tree.command(name="app_results", description="Send application result to user.", guild=guild)
 @app_commands.describe(
     user="User to DM",
     result="Pass or Fail",
-    department="Department applied for",
+    department="Department of application",
     reason="Reason for result"
 )
 @app_commands.choices(result=[
@@ -136,43 +136,45 @@ async def app_results(
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    # Select embed content based on result
-    if result.value == "Passed":
+    result_value = result.value.lower()  # "passed" or "failed"
+    runner_name = str(interaction.user)
+
+    # Discohook embed template for passed
+    if result_value == "passed":
         description = (
             f"Hello {user.mention},\n\n"
-            f"We thank you for applying for Ryanair RBX. This is a short message to inform you that you have **{result.name}** your **{department}** application.\n\n"
+            f"We thank you for applying for Ryanair RBX. This is a short message to inform you that you have **Passed** your **{department}** application.\n\n"
             f"**Feedback:**\n{reason}\n\n"
-            "Please read over all the given information in SEP Information and complete your training from there.\n\n"
-            "> Please do note:\n"
-            "- You have 8 days to complete your SEP Training.\n"
-            "- You have 4 days after your SEP Training to complete your designated department training.\n\n"
-            f"**Kind regards,**\n*{interaction.user}*"
+            f"Please read over all the given information in SEP Information and complete your training from there.\n\n"
+            f"> Please do note:\n"
+            f"- You have 8 days to complete your SEP Training.\n"
+            f"- You have 4 days after your SEP Training to complete your designated department training.\n\n"
+            f"**Kind regards,**\n*{runner_name}*"
         )
     else:  # Failed
         description = (
             f"Hello {user.mention},\n\n"
-            f"We thank you for applying for Ryanair RBX. This is a short message to inform you that you have **{result.name}** your **{department}** application.\n\n"
+            f"We thank you for applying for Ryanair RBX. This is a short message to inform you that you have **Failed** your **{department}** application.\n\n"
             f"**Feedback:**\n{reason}\n\n"
-            "We strongly suggest reading the questions carefully and adding lots of detail into your application.\n\n"
-            "> Please do note:\n"
-            "- You can re apply at anytime, and we wish you the best of luck if you do so.\n\n"
-            f"**Kind regards,**\n*{interaction.user}*"
+            f"We strongly suggest reading the questions carefully and adding lots of detail into your application.\n\n"
+            f"> Please do note:\n"
+            f"- You can re-apply at anytime, and we wish you the best of luck if you do so.\n\n"
+            f"**Kind regards,**\n*{runner_name}*"
         )
 
-    # Build embed
     embed = discord.Embed(
         description=description,
-        color=931961
+        color=0xE30421  # you can keep 931961 (hex 0xE30421) for Ryanair red
     )
     embed.set_author(name="Ryanair RBX | Application Update")
-    embed.set_thumbnail(url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68b2627a&is=68b110fa&hm=a0b3e38674839a4a7e7e89bf614431aa8b79fcc3921b417e216f85fc84e13d7f&=&format=webp&quality=lossless&width=640&height=640")
-    embed.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b22b2a&is=68b0d9aa&hm=c9771c9a661c666a99fe8f63186ec0d79142d518f934853949bcaba42ebf09d5&=&format=webp&quality=lossless&width=614&height=76")
-
+    embed.set_thumbnail(url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png")
+    embed.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png")
+    
     try:
         await user.send(embed=embed)
-        await interaction.response.send_message(f"Application result sent to {user.mention}.", ephemeral=True)
+        await interaction.response.send_message(f"✅ Application result sent to {user.mention}.", ephemeral=True)
     except Exception:
-        await interaction.response.send_message(f"Failed to send DM to {user.mention}.", ephemeral=True)
+        await interaction.response.send_message(f"❌ Failed to send DM to {user.mention}.", ephemeral=True)
 
 # Flight briefing cmd
 @bot.tree.command(name="flight_briefing", description="Send a flight briefing.", guild=guild)
