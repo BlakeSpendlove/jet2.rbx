@@ -52,19 +52,14 @@ flight_logs = {}
 
 infractions = {}
 
-async def update_presence():
-    total_infractions = sum(len(v) for v in infractions.values()) if infractions else 0
-    activity_text = f"Watching {total_infractions} Infractions"
+@bot.event
+async def on_ready():
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
-            name=activity_text
+            name="RYR Infractions"
         )
     )
-
-@bot.event
-async def on_ready():
-    await update_presence()
     print(f"✅ Logged in as {bot.user}")
     
 @bot.event
