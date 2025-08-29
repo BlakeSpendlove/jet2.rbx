@@ -218,7 +218,7 @@ async def flight_briefing(interaction: discord.Interaction, flight_code: str, ga
 
     await interaction.response.send_message("Flight briefing sent!", ephemeral=True)
 
-# /flight_log command
+# /flight_log command with author and Discohook-style embed
 @bot.tree.command(name="flight_log", description="Log a flight with evidence.", guild=guild)
 @app_commands.describe(flight_code="Flight code", evidence="Evidence attachment")
 async def flight_log(interaction: discord.Interaction, flight_code: str, evidence: discord.Attachment):
@@ -240,27 +240,35 @@ async def flight_log(interaction: discord.Interaction, flight_code: str, evidenc
         "log_id": log_id,
     })
 
-    # Embed for logging
+    # Build embed
     embed = discord.Embed(
-        title="RYR RBX | Flight Log Submitted",
         description=(
-            f"**👤 Staff Member:** {interaction.user.mention}\n"
-            f"**🛫 Flight Code:** {flight_code}\n"
-            f"**📅 Date:** {timestamp}\n\n"
-            f"━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"Your flight has been successfully logged and submitted.\n"
-            f"Please do not delete your evidence.\n\n"
-            f"✈️ RYR RBX | Low fares, made simple."
+            f"**Staff Member:**\n{interaction.user.mention}\n"
+            f"**Flight Code:**\n{flight_code}\n"
+            f"**Evidence:**\n"
         ),
-        color=0x193E75
+        color=931961
     )
-    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+    # Keep author at top with username + avatar
+    embed.set_author(
+        name=str(interaction.user),
+        icon_url=interaction.user.display_avatar.url
+    )
+    # Title at top of embed
+    embed.title = f"Ryanair RBX | {flight_code} Flight Log"
+
+    # Evidence image shows the screenshot
     embed.set_image(url=evidence.url)
-    embed.set_thumbnail(url=THUMBNAIL_URL)
+
+    # Discohook-style thumbnail
+    embed.set_thumbnail(url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68b2627a&is=68b110fa&hm=a0b3e38674839a4a7e7e89bf614431aa8b79fcc3921b417e216f85fc84e13d7f&=&format=webp&quality=lossless&width=640&height=640")
+
+    # Footer with generated ID
     embed.set_footer(text=f"{footer_text} • ID: {log_id}")
 
+    # Send to flight log channel with user mention
     channel = bot.get_channel(FLIGHT_LOG_CHANNEL_ID)
-    await channel.send(content=interaction.user.mention, embed=embed)
+    await channel.send(content=f"{interaction.user.mention}", embed=embed)
     await interaction.response.send_message("Flight log submitted!", ephemeral=True)
 
 # /infraction command
