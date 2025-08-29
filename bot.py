@@ -126,8 +126,8 @@ async def embed(interaction: discord.Interaction, embed_json: str):
     reason="Reason for result"
 )
 @app_commands.choices(result=[
-    app_commands.Choice(name="Passed", value="Passed"),
-    app_commands.Choice(name="Failed", value="Failed")  # ✅ fixed
+    app_commands.Choice(name="Pass", value="Pass"),
+    app_commands.Choice(name="Fail", value="Fail")
 ])
 async def app_results(
     interaction: discord.Interaction,
@@ -150,14 +150,14 @@ async def app_results(
         f"**Feedback:**\n{reason}\n\n"
     )
 
-    if result.value == "Passed":
+    if result.value == "Pass":
         description_text += (
             "Please read over all the given information in SEP Information and complete your training from there.\n\n"
             "> Please do note:\n"
             "- You have 8 days to complete your SEP Training.\n"
             "- You have 4 days after your SEP Training to complete your designated department training.\n\n"
         )
-    else:  # Failed
+    else:  # Fail
         description_text += (
             "We strongly suggest reading the questions carefully and adding lots of detail into your application.\n\n"
             "> Please do note:\n"
