@@ -127,7 +127,7 @@ async def embed(interaction: discord.Interaction, embed_json: str):
 )
 @app_commands.choices(result=[
     app_commands.Choice(name="Passed", value="Passed"),
-    app_commands.Choice(name="Failed", value="Failed")
+    app_commands.Choice(name="Failed", value="Failed")  # ✅ fixed
 ])
 async def app_results(
     interaction: discord.Interaction,
@@ -168,7 +168,7 @@ async def app_results(
 
     embed = discord.Embed(
         description=description_text,
-        color=0xE2061C  # Matches Discohook red
+        color=0xE2061C
     )
     embed.set_author(
         name="Ryanair RBX | Application Update",
