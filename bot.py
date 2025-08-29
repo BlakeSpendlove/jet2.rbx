@@ -9,6 +9,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from utils import generate_footer
+from discord.ext import commands, tasks
+import random
 
 intents = discord.Intents.default()
 intents.presences = True
