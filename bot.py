@@ -114,82 +114,45 @@ async def embed(interaction: discord.Interaction, embed_json: str):
     await interaction.response.send_message("Embed sent!", ephemeral=True)
 
 # Application result command
-@bot.tree.command(
-    name="app_results",
-    description="Send application result to a user.",
-    guild=discord.Object(id=GUILD_ID)
-)
-@app_commands.describe(
-    user="User to DM",
-    result="Pass or Fail",
-    department="Department applied for",
-    reason="Reason for result"
-)
+@bot.tree.command(name="app_results", description="Send application result to user.", guild=guild)
+@app_commands.describe(user="User to DM", result="Pass or Fail", reason="Reason for result")
 @app_commands.choices(result=[
-    app_commands.Choice(name="Pass", value="Pass"),
-    app_commands.Choice(name="Fail", value="Fail")
+    app_commands.Choice(name="Pass", value="pass"),
+    app_commands.Choice(name="Fail", value="fail")
 ])
 async def app_results(
     interaction: discord.Interaction,
     user: discord.User,
     result: app_commands.Choice[str],
-    department: str,
     reason: str
 ):
-    # Permission check
     if not has_role(interaction, APP_RESULTS_ROLE_ID):
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    # Base JSON structure for Discohook
-    base_embed = {
-        "content": f"@{user.name}",
-        "embeds": [
-            {
-                "description": "",
-                "color": 931961,
-                "author": {"name": "Ryanair RBX | Application Update"},
-                "image": {"url": "https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png"},
-                "thumbnail": {"url": "https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png"}
-            }
-        ]
-    }
-
-    # Fill description depending on Pass or Fail
-    description = (
-        f"Hello {user.mention},\n\n"
-        f"We thank you for applying for Ryanair RBX. This is a short message to inform you that you have **{result.name}** your **{department}** application.\n\n"
-        f"**Feedback:**\n{reason}\n\n"
-    )
-
-    if result.value == "Pass":
-        description += (
-            "Please read over all the given information in SEP Information and complete your training from there.\n\n"
-            "> Please do note:\n"
-            "- You have 8 days to complete your SEP Training.\n"
-            "- You have 4 days after your SEP Training to complete your designated department training.\n\n"
-        )
-    else:
-        description += (
-            "We strongly suggest reading the questions carefully and adding lots of detail into your application.\n\n"
-            "> Please do note:\n"
-            "- You can re-apply at anytime, and we wish you the best of luck if you do so.\n\n"
-        )
-
-    description += f"**Kind regards,**\n*{interaction.user}*"
-    base_embed["embeds"][0]["description"] = description
-
-    # Convert JSON to Embed
-    embed = discord.Embed.from_dict(base_embed["embeds"][0])
-    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-    if BANNER_URL:
-        embed.set_image(url=BANNER_URL)
     footer_text, _ = generate_footer()
+    color = 0x193E75 if result.value == "pass" else 0xFF0000
+
+    embed = discord.Embed(
+        title="RYR RBX | Application Result",
+        description=(
+            f"Hello {user.mention},\n\n"
+            f"Thank you for applying to RYR RBX. Your application has been reviewed.\n\n"
+            f"**Result:** {result.name}\n"
+            f"**Reason:** {reason}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"If you have any questions, please contact a member of management.\n\n"
+            f"✈️ RYR RBX — Low fares, made simple."
+        ),
+        color=color
+    )
+    embed.set_thumbnail(url=THUMBNAIL_URL)
+    embed.set_image(url=BANNER_URL)
+    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
     embed.set_footer(text=footer_text)
 
-    # Send DM
     try:
-        await user.send(content=f"@{user.name}", embed=embed)
+        await user.send(embed=embed)
         await interaction.response.send_message(f"Application result sent to {user.mention}.", ephemeral=True)
     except Exception:
         await interaction.response.send_message(f"Failed to send DM to {user.mention}.", ephemeral=True)
