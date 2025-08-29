@@ -11,7 +11,7 @@ from discord import app_commands
 from utils import generate_footer
 
 intents = discord.Intents.default()
-intents.message_content = False
+intents.presences = True   # 👈 required for watching/playing/listening status
 intents.guilds = True
 intents.members = True
 
