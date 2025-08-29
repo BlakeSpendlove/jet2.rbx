@@ -286,7 +286,7 @@ async def infraction(
             f"**Reason:**\n{reason}\n\n"
             f"**NOTE: If you wish to appeal this infraction, please open a support ticket.**"
         ),
-        color=0x0E3A39  # 931961 decimal → hex = 0x0E3A39
+        color=0x193E75  # 931961 decimal → hex = 0x0E3A39
     )
     embed.set_author(name="Ryanair RBX | Staff Member Infraction Notice")
     embed.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b22b2a&is=68b0d9aa&hm=c9771c9a661c666a99fe8f63186ec0d79142d518f934853949bcaba42ebf09d5&=&format=webp&quality=lossless&width=614&height=76")
