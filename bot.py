@@ -53,7 +53,7 @@ flight_logs = {}
 infractions = {}
 
 @bot.event
-async def on_ready():
+async def on_ready(await bot.change_presence(activity=discord.Game(name="RYR Infractions"))):
     await bot.tree.sync(guild=guild)
     await bot.change_presence(
         activity=discord.Activity(
