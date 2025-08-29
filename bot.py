@@ -46,22 +46,24 @@ FLIGHT_LOG_CHANNEL_ID = 1398731789106675923
 FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516
 RECRUITMENT_DAY_CHANNEL_ID = 1397009186566438943  # replace with your channel ID
 
+bot = commands.Bot(command_prefix='/')  # change prefix if needed
+
 guild = discord.Object(id=GUILD_ID)
 
 flight_logs = {}
 
 infractions = {}
 
+# Event that runs when the bot is ready
 @bot.event
-async def on_ready(await bot.change_presence(activity=discord.Game(name="RYR Infractions"))):
-    await bot.tree.sync(guild=guild)
-    await bot.change_presence(
-        activity=discord.Activity(
-            type=discord.ActivityType.watching,
-            name="RYR Infractions"
-        )
+async def on_ready():
+    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
+    activity = discord.Activity(
+        type=discord.ActivityType.watching,  # this makes it "Watching ..."
+        name="RYR Infractions"               # text shown after Watching
     )
-    print(f"✅ Logged in as {bot.user} (ID: {bot.user.id})")
+    await bot.change_presence(activity=activity)
+    print("Status set to 'Watching RYR Infractions'")
     
 @bot.event
 async def on_ready():
