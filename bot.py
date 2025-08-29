@@ -52,21 +52,19 @@ flight_logs = {}
 
 infractions = {}
 
-# Event that runs when the bot is ready
 @bot.event
 async def on_ready():
-    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
+    print(f"Logged in as {bot.user} (ID: {bot.user.id})")
+
     activity = discord.Activity(
-        type=discord.ActivityType.watching,  # this makes it "Watching ..."
-        name="RYR Infractions"               # text shown after Watching
+        type=discord.ActivityType.watching,
+        name="RYR Infractions"
     )
     await bot.change_presence(activity=activity)
     print("Status set to 'Watching RYR Infractions'")
-    
-@bot.event
-async def on_ready():
+
+    # Sync commands
     await bot.tree.sync(guild=guild)
-    print(f"Logged in as {bot.user}")
 
 def has_role(interaction: discord.Interaction, role_id: int) -> bool:
     return any(role.id == role_id for role in interaction.user.roles)
