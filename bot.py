@@ -416,6 +416,16 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
 @app_commands.describe(user="User requesting LOA", date_from="Start date (DD/MM/YYYY)", date_to="End date (DD/MM/YYYY)", reason="Reason for LOA")
 async def loa_request(interaction: discord.Interaction, user: discord.User, date_from: str, date_to: str, reason: str):
     footer_text, _ = generate_footer()
+    OWNER_ID = 719122118985646142  # your ID
+
+    async def report_error(error: Exception, context: str = ""):
+        try:
+            owner = await bot.fetch_user(OWNER_ID)
+            await owner.send(
+                f"⚠️ **LOA Error Alert**\nContext: `{context}`\nError: ```{error}```"
+            )
+        except Exception as dm_error:
+            print(f"Failed to DM owner about error: {dm_error}")
 
     embed = discord.Embed(
         title="RYR RBX | Leave of Absence Request",
@@ -450,31 +460,41 @@ async def loa_request(interaction: discord.Interaction, user: discord.User, date
         async def approve(self, button_inter: discord.Interaction, button: discord.ui.Button):
             guild_obj = interaction.guild
             role = guild_obj.get_role(LOA_ROLE_ID)
-            await user.add_roles(role)
+
+            try:
+                await user.add_roles(role)
+            except Exception as e:
+                await report_error(e, "Adding LOA role")
 
             # DM user
-            await user.send(
-                embed=discord.Embed(
-                    title="RYR RBX | LOA Approved",
-                    description=f"Hello {user.mention},\n\nYour LOA from **{date_from}** to **{date_to}** has been **approved**.\n\nEnjoy your time off!",
-                    color=0x2ECC71
-                ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
-            )
+            try:
+                await user.send(
+                    embed=discord.Embed(
+                        title="RYR RBX | LOA Approved",
+                        description=f"Hello {user.mention},\n\nYour LOA from **{date_from}** to **{date_to}** has been **approved**.\n\nEnjoy your time off!",
+                        color=0x2ECC71
+                    ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
+                )
+            except Exception as e:
+                await report_error(e, "DM LOA approved")
 
             # Update embed in channel
-            approved_embed = discord.Embed(
-                title="RYR RBX | LOA Approved",
-                description=(
-                    f"✅ The LOA of {user.mention} has been **accepted** by admin {button_inter.user.mention}\n\n"
-                    f"**📅 Dates:** {date_from} ➝ {date_to}"
-                ),
-                color=0x2ECC71
-            )
-            approved_embed.set_thumbnail(url=THUMBNAIL_URL)
-            approved_embed.set_image(url=BANNER_URL)
-            approved_embed.set_footer(text=footer_text)
-            approved_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-            await message.edit(embed=approved_embed, view=None)
+            try:
+                approved_embed = discord.Embed(
+                    title="RYR RBX | LOA Approved",
+                    description=(
+                        f"✅ The LOA of {user.mention} has been **accepted** by admin {button_inter.user.mention}\n\n"
+                        f"**📅 Dates:** {date_from} ➝ {date_to}"
+                    ),
+                    color=0x2ECC71
+                )
+                approved_embed.set_thumbnail(url=THUMBNAIL_URL)
+                approved_embed.set_image(url=BANNER_URL)
+                approved_embed.set_footer(text=footer_text)
+                approved_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+                await message.edit(embed=approved_embed, view=None)
+            except Exception as e:
+                await report_error(e, "Editing approval message")
 
             await button_inter.response.send_message(f"LOA approved for {user.mention}.", ephemeral=True)
 
@@ -486,47 +506,60 @@ async def loa_request(interaction: discord.Interaction, user: discord.User, date
                 if delay > 0:
                     async def remove_later():
                         await asyncio.sleep(delay)
-                        await user.remove_roles(role)
-                        await user.send(
-                            embed=discord.Embed(
-                                title="RYR RBX | Welcome Back",
-                                description=f"Welcome back {user.mention}!\n\nYour LOA has ended. We’re glad to see you again!",
-                                color=0x193E75
-                            ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
-                        )
+                        try:
+                            await user.remove_roles(role)
+                        except Exception as e:
+                            await report_error(e, "Removing LOA role")
+
+                        try:
+                            await user.send(
+                                embed=discord.Embed(
+                                    title="RYR RBX | Welcome Back",
+                                    description=f"Welcome back {user.mention}!\n\nYour LOA has ended. We’re glad to see you again!",
+                                    color=0x193E75
+                                ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
+                            )
+                        except Exception as e:
+                            await report_error(e, "DM after LOA ended")
+
                         try:
                             await message.delete()
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            await report_error(e, "Deleting LOA message")
+
                     asyncio.create_task(remove_later())
             except Exception as e:
-                print(f"Failed to schedule LOA removal: {e}")
+                await report_error(e, "Scheduling LOA removal")
 
         @discord.ui.button(label="❌ Deny", style=discord.ButtonStyle.red)
         async def deny(self, button_inter: discord.Interaction, button: discord.ui.Button):
-            # DM user
-            await user.send(
-                embed=discord.Embed(
-                    title="RYR RBX | LOA Denied",
-                    description=f"Hello {user.mention},\n\nUnfortunately, your LOA request from **{date_from}** to **{date_to}** has been **denied**.",
-                    color=0xE74C3C
-                ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
-            )
+            try:
+                await user.send(
+                    embed=discord.Embed(
+                        title="RYR RBX | LOA Denied",
+                        description=f"Hello {user.mention},\n\nUnfortunately, your LOA request from **{date_from}** to **{date_to}** has been **denied**.",
+                        color=0xE74C3C
+                    ).set_thumbnail(url=THUMBNAIL_URL).set_image(url=BANNER_URL)
+                )
+            except Exception as e:
+                await report_error(e, "DM LOA denied")
 
-            # Update embed in channel
-            denied_embed = discord.Embed(
-                title="RYR RBX | LOA Denied",
-                description=(
-                    f"❌ The LOA of {user.mention} has been **denied** by admin {button_inter.user.mention}\n\n"
-                    f"**📅 Dates:** {date_from} ➝ {date_to}"
-                ),
-                color=0xE74C3C
-            )
-            denied_embed.set_thumbnail(url=THUMBNAIL_URL)
-            denied_embed.set_image(url=BANNER_URL)
-            denied_embed.set_footer(text=footer_text)
-            denied_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-            await message.edit(embed=denied_embed, view=None)
+            try:
+                denied_embed = discord.Embed(
+                    title="RYR RBX | LOA Denied",
+                    description=(
+                        f"❌ The LOA of {user.mention} has been **denied** by admin {button_inter.user.mention}\n\n"
+                        f"**📅 Dates:** {date_from} ➝ {date_to}"
+                    ),
+                    color=0xE74C3C
+                )
+                denied_embed.set_thumbnail(url=THUMBNAIL_URL)
+                denied_embed.set_image(url=BANNER_URL)
+                denied_embed.set_footer(text=footer_text)
+                denied_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
+                await message.edit(embed=denied_embed, view=None)
+            except Exception as e:
+                await report_error(e, "Editing denial message")
 
             await button_inter.response.send_message(f"LOA denied for {user.mention}.", ephemeral=True)
 
