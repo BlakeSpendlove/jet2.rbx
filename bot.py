@@ -47,6 +47,7 @@ PROMOTION_CHANNEL_ID = 1398731752197066953
 FLIGHT_LOG_CHANNEL_ID = 1398731789106675923
 FLIGHT_BRIEFING_CHANNEL_ID = 1399056411660386516
 RECRUITMENT_DAY_CHANNEL_ID = 1397009186566438943  # replace with your channel ID
+RESULTS_CHANNEL_ID = 1408401129418657854
 
 guild = discord.Object(id=GUILD_ID)
 
@@ -620,8 +621,9 @@ async def results(interaction: discord.Interaction, user: discord.User, departme
         embed2.set_thumbnail(url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68baf43a&is=68b9a2ba&hm=e79cecde9be5519bdfe6f53a09b2982a8ca23423f3c2eb7ae39c4b811d4dde25&=&format=webp&quality=lossless&width=640&height=640")
         embed2.set_footer(text=f"RESULTS ID: {unique_id} • Logged: {timestamp}")
 
-        # Send both embeds publicly (with user ping)
-        await interaction.channel.send(content=user.mention, embeds=[embed1, embed2])
+        # --- Send in designated channel ---
+        channel = bot.get_channel(RESULTS_CHANNEL_ID)
+        await channel.send(content=user.mention, embeds=[embed1, embed2])
 
         # Confirm privately to command user
         await interaction.response.send_message(
@@ -632,7 +634,6 @@ async def results(interaction: discord.Interaction, user: discord.User, departme
         await interaction.response.send_message(
             f"❌ Failed to send results: `{e}`", ephemeral=True
         )
-
 # /dm command
 @bot.tree.command(name="dm", description="DM a user with a custom embed (JSON).", guild=guild)
 @app_commands.describe(user="User to DM", embed_json="Embed JSON content")
