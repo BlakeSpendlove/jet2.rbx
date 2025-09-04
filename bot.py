@@ -304,7 +304,7 @@ async def infraction(
     })
 
     # --- Embed 1: Banner image only ---
-    embed1 = discord.Embed(color=0x0F0F0F)
+    embed1 = discord.Embed(color=0x193E75)
     embed1.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1413270853034049647/Group_3_1.png?ex=68bb528c&is=68ba010c&hm=a3f9f785f21bec8ad36dbd9cb66d15e697cc3433b58da717034366b9dab445cf&=&format=webp&quality=lossless&width=980&height=113")
 
     # --- Embed 2: Infraction details ---
@@ -315,7 +315,7 @@ async def infraction(
             f"**Type:**\n{type.value}\n"
             f"**Reason:**\n{reason}"
         ),
-        color=0x0F0F0F
+        color=0x193E75
     )
     embed2.set_author(
         name=str(interaction.user),
@@ -339,7 +339,7 @@ async def infraction(
             f"If you wish to appeal this consequence, please open a ticket and state your reason for appeal, "
             f"along with the message link."
         ),
-        color=0x103C70
+        color=0x193E75
     )
     dm_embed.set_author(
         name=str(interaction.user),
