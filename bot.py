@@ -357,7 +357,7 @@ async def infraction(
 
     await interaction.response.send_message(f"Infraction logged with ID `{inf_id}`.", ephemeral=True)
 
-# Promote command
+# /promote command
 @bot.tree.command(name="promote", description="Log a promotion.", guild=guild)
 @app_commands.describe(user="User promoted", promotion_to="New rank", reason="Reason for promotion")
 async def promote(interaction: discord.Interaction, user: discord.User, promotion_to: str, reason: str):
@@ -365,32 +365,35 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         await interaction.response.send_message("You do not have permission to use this command.", ephemeral=True)
         return
 
-    footer_text, _ = generate_footer()
+    footer_text, promo_id = generate_footer()
 
-    # Promotion embed (public logging)
-    embed = discord.Embed(
-        title="Promotion Notice 🥳",
+    # --- Embed 1: Banner image only ---
+    embed1 = discord.Embed(color=0x193E75)
+    embed1.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1413275831282831594/Group_3_2.png?ex=68bb572f&is=68ba05af&hm=f7dc817f99dd1dc6d7561f10f643d66dec9a0ca720a008b13ad1b2e7af0184c1&=&format=webp&quality=lossless&width=998&height=113")
+
+    # --- Embed 2: Promotion details ---
+    embed2 = discord.Embed(
+        title="Ryanair RBX | Staff Member Promotion",
         description=(
-            f"**Promoted Staff Member:**\n{user.mention}\n"
-            f"**Promotion to:**\n{promotion_to}\n"
+            f"**User:**\n{user.mention}\n"
+            f"**Role:**\n{promotion_to}\n"
             f"**Reason:**\n{reason}"
         ),
-        color=1062512
+        color=0x193E75
     )
-    embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-    embed.set_thumbnail(
-        url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68b110fa&is=68afbf7a&hm=9232e8d9e7190cda8f8498d2b3af8013561c09f2f75de7dbc23f9c785a28711b&=&format=webp&quality=lossless&width=640&height=640"
+    embed2.set_author(
+        name=str(interaction.user),
+        icon_url=interaction.user.display_avatar.url
     )
-    embed.set_image(
-        url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b0d9aa&is=68af882a&hm=83c7ddb79dfa6ee1026183e8e2dfcf15c9f8570b3813015b637a7b3edea4cabe&=&format=webp&quality=lossless&width=614&height=76"
-    )
-    embed.set_footer(text=footer_text)
+    embed2.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1413270894473773147/Group_5_1.png?ex=68bb5296&is=68ba0116&hm=3b8a88c78f1bb5c28288735dfb6ab15ee418642c0051592853c1f73497400f04&=&format=webp&quality=lossless&width=788&height=66")
+    embed2.set_thumbnail(url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68baf43a&is=68b9a2ba&hm=e79cecde9be5519bdfe6f53a09b2982a8ca23423f3c2eb7ae39c4b811d4dde25&=&format=webp&quality=lossless&width=640&height=640")
+    embed2.set_footer(text=f"{footer_text} • ID: {promo_id}")
 
-    # Send announcement in promotions channel
+    # --- Send both embeds in one message ---
     channel = bot.get_channel(PROMOTION_CHANNEL_ID)
-    await channel.send(content=user.mention, embed=embed)
+    await channel.send(content=user.mention, embeds=[embed1, embed2])
 
-    # DM embed (congratulations message)
+    # --- DM embed (congratulations) ---
     dm_embed = discord.Embed(
         title="Promotion Notice 🥳",
         description=(
@@ -400,16 +403,15 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
             f"You were promoted because **{reason}**.\n\n"
             f"Once again, congratulations and thank you for your dedication to Ryanair RBX. 🥳"
         ),
-        color=1062512
+        color=0x193E75
     )
-    dm_embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-    dm_embed.set_thumbnail(
-        url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68b110fa&is=68afbf7a&hm=9232e8d9e7190cda8f8498d2b3af8013561c09f2f75de7dbc23f9c785a28711b&=&format=webp&quality=lossless&width=640&height=640"
+    dm_embed.set_author(
+        name=str(interaction.user),
+        icon_url=interaction.user.display_avatar.url
     )
-    dm_embed.set_image(
-        url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b0d9aa&is=68af882a&hm=83c7ddb79dfa6ee1026183e8e2dfcf15c9f8570b3813015b637a7b3edea4cabe&=&format=webp&quality=lossless&width=614&height=76"
-    )
-    dm_embed.set_footer(text=footer_text)
+    dm_embed.set_thumbnail(url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68baf43a&is=68b9a2ba&hm=e79cecde9be5519bdfe6f53a09b2982a8ca23423f3c2eb7ae39c4b811d4dde25&=&format=webp&quality=lossless&width=640&height=640")
+    dm_embed.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b0d9aa&is=68af882a&hm=83c7ddb79dfa6ee1026183e8e2dfcf15c9f8570b3813015b637a7b3edea4cabe&=&format=webp&quality=lossless&width=614&height=76")
+    dm_embed.set_footer(text=f"{footer_text} • ID: {promo_id}")
 
     try:
         await user.send(embed=dm_embed)
@@ -420,7 +422,7 @@ async def promote(interaction: discord.Interaction, user: discord.User, promotio
         )
         return
 
-    await interaction.response.send_message("Promotion logged and DM sent.", ephemeral=True)
+    await interaction.response.send_message(f"Promotion logged with ID `{promo_id}` and DM sent.", ephemeral=True)
 
 # LOA Request Command
 @bot.tree.command(name="loa_request", description="Request a leave of absence.", guild=guild)
