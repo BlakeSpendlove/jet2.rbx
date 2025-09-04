@@ -303,24 +303,24 @@ async def infraction(
         "timestamp": timestamp
     })
 
-# --- Public log embed (Discohook style) ---
-embed = discord.Embed(
-    description=(
-        f"**Infracted User:**\n{user.mention}\n"
-        f"**Staff Member:**\n{interaction.user.mention}\n"
-        f"**Type of Infraction:**\n{type.value}\n"
-        f"**Reason:**\n{reason}\n\n"
-        f"**NOTE: If you wish to appeal this infraction, please open a support ticket.**"
-    ),
-    color=0x193E75
-)
-embed.set_author(
-    name=str(interaction.user),
-    icon_url=interaction.user.display_avatar.url
-)
-embed.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b22b2a&is=68b0d9aa&hm=c9771c9a661c666a99fe8f63186ec0d79142d518f934853949bcaba42ebf09d5&=&format=webp&quality=lossless&width=614&height=76")
-embed.set_thumbnail(url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68b2627a&is=68b110fa&hm=a0b3e38674839a4a7e7e89bf614431aa8b79fcc3921b417e216f85fc84e13d7f&=&format=webp&quality=lossless&width=640&height=640")
-embed.set_footer(text=f"{footer_text} • ID: {inf_id}")
+    # --- Public log embed (Discohook style) ---
+    embed = discord.Embed(
+        description=(
+            f"**Infracted User:**\n{user.mention}\n"
+            f"**Staff Member:**\n{interaction.user.mention}\n"
+            f"**Type of Infraction:**\n{type.value}\n"
+            f"**Reason:**\n{reason}\n\n"
+            f"**NOTE: If you wish to appeal this infraction, please open a support ticket.**"
+        ),
+        color=0x193E75
+    )
+    embed.set_author(
+        name=str(interaction.user),
+        icon_url=interaction.user.display_avatar.url
+    )
+    embed.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1410392278022754324/ryanair_rbx_main.png?ex=68b22b2a&is=68b0d9aa&hm=c9771c9a661c666a99fe8f63186ec0d79142d518f934853949bcaba42ebf09d5&=&format=webp&quality=lossless&width=614&height=76")
+    embed.set_thumbnail(url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68b2627a&is=68b110fa&hm=a0b3e38674839a4a7e7e89bf614431aa8b79fcc3921b417e216f85fc84e13d7f&=&format=webp&quality=lossless&width=640&height=640")
+    embed.set_footer(text=f"{footer_text} • ID: {inf_id}")
 
     channel = bot.get_channel(INFRACTION_CHANNEL_ID)
     await channel.send(content=user.mention, embed=embed)
