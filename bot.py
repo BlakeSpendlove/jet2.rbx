@@ -307,7 +307,6 @@ async def infraction(
     embed = discord.Embed(
         description=(
             f"**Infracted User:**\n{user.mention}\n"
-            f"**Staff Member:**\n{interaction.user.mention}\n"
             f"**Type of Infraction:**\n{type.value}\n"
             f"**Reason:**\n{reason}\n\n"
             f"**NOTE: If you wish to appeal this infraction, please open a support ticket.**"
