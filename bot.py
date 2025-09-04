@@ -597,28 +597,31 @@ async def results(interaction: discord.Interaction, user: discord.User, departme
         unique_id = generate_id()
         timestamp = datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC")
 
-        embed = discord.Embed(
-            title="Ryanair RBX | Result",
+        # --- Embed 1: Banner image only ---
+        embed1 = discord.Embed(color=0x193E75)
+        embed1.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1413277359582220319/Group_3_3.png?ex=68bb589b&is=68ba071b&hm=0d9027c8220e82a036521fe5c7d9a27d115686f9fbfbcc9915fc987c8016ee51&=&format=webp&quality=lossless&width=983&height=113")
+
+        # --- Embed 2: Results details ---
+        embed2 = discord.Embed(
+            title="Ryanair RBX | Staff Member Results",
             description=(
-                f"**User:**\n{user.mention}\n\n"
-                f"**Department:**\n{department}\n\n"
-                f"**Result:**\n{result}\n\n"
+                f"**User:**\n{user.mention}\n"
+                f"**Department:**\n{department}\n"
+                f"**Result:**\n{result}\n"
                 f"**Reason:**\n{reason}"
             ),
-            color=0x19388D
+            color=0x193E75
         )
+        embed2.set_author(
+            name=str(interaction.user),
+            icon_url=interaction.user.display_avatar.url
+        )
+        embed2.set_image(url="https://media.discordapp.net/attachments/1395760490982150194/1413270894473773147/Group_5_1.png?ex=68bb5296&is=68ba0116&hm=3b8a88c78f1bb5c28288735dfb6ab15ee418642c0051592853c1f73497400f04&=&format=webp&quality=lossless&width=788&height=66")
+        embed2.set_thumbnail(url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68baf43a&is=68b9a2ba&hm=e79cecde9be5519bdfe6f53a09b2982a8ca23423f3c2eb7ae39c4b811d4dde25&=&format=webp&quality=lossless&width=640&height=640")
+        embed2.set_footer(text=f"RESULTS ID: {unique_id} • Logged: {timestamp}")
 
-        embed.set_thumbnail(
-            url="https://media.discordapp.net/attachments/1395760490982150194/1408096146458673262/Ryanair.nobg.png?ex=68a927fa&is=68a7d67a&hm=9d1ac68231b840543e973cab63f4f4a304e88e4c736f294d4bc95efb7890bc44&=&format=webp&quality=lossless&width=640&height=640"
-        )
-        embed.set_image(
-            url="https://media.discordapp.net/attachments/1395760490982150194/1408148733019033712/Group_1_1.png?ex=68a958f4&is=68a80774&hm=e048ddd33e13639e64970cd7b0c0af4c1ebb55f856231b413dfef32da6215ade&=&format=webp&quality=lossless&width=694&height=55"
-        )
-        embed.set_author(name=str(interaction.user), icon_url=interaction.user.display_avatar.url)
-        embed.set_footer(text=f"RESULTS ID: {unique_id} • Logged: {timestamp}")
-
-        # Send result publicly (with user ping)
-        await interaction.channel.send(content=user.mention, embed=embed)
+        # Send both embeds publicly (with user ping)
+        await interaction.channel.send(content=user.mention, embeds=[embed1, embed2])
 
         # Confirm privately to command user
         await interaction.response.send_message(
