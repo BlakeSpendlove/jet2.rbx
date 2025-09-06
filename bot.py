@@ -41,6 +41,7 @@ FLIGHTLOG_REMOVE_ROLE_ID = 1396992153208488057
 INFRACTION_VIEW_ROLE_ID = 1396992201636057149
 INFRACTION_REMOVE_ROLE_ID = 1396992153208488057
 RECRUITMENT_DAY_ROLE_ID = 1396992201636057149  # Replace with your actual role ID
+MODERATION_ROLE_ID = 1396992153208488057
 
 INFRACTION_CHANNEL_ID = 1398731768449994793
 PROMOTION_CHANNEL_ID = 1398731752197066953
@@ -114,6 +115,55 @@ async def embed(interaction: discord.Interaction, embed_json: str):
     await interaction.channel.send(embed=embed)
     await interaction.response.send_message("Embed sent!", ephemeral=True)
 
+# --- Kick Command ---
+@app_commands.command(name="kick", description="Kick a member from the server.")
+@app_commands.describe(member="The member to kick", reason="Reason for kicking")
+async def kick(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
+    if MODERATION_ROLE_ID not in [role.id for role in interaction.user.roles]:
+        return await interaction.response.send_message("❌ You don’t have permission to use this command.", ephemeral=True)
+
+    await member.kick(reason=reason)
+    await interaction.response.send_message(f"👢 {member.mention} has been kicked.\n**Reason:** {reason}")
+
+# --- Ban Command ---
+@app_commands.command(name="ban", description="Ban a member from the server.")
+@app_commands.describe(member="The member to ban", reason="Reason for banning")
+async def ban(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
+    if MODERATION_ROLE_ID not in [role.id for role in interaction.user.roles]:
+        return await interaction.response.send_message("❌ You don’t have permission to use this command.", ephemeral=True)
+
+    await member.ban(reason=reason)
+    await interaction.response.send_message(f"🔨 {member.mention} has been banned.\n**Reason:** {reason}")
+
+# --- Timeout Command ---
+@app_commands.command(name="timeout", description="Timeout a member for a duration (in minutes).")
+@app_commands.describe(member="The member to timeout", duration="Duration in minutes", reason="Reason for timeout")
+async def timeout(interaction: discord.Interaction, member: discord.Member, duration: int, reason: str = "No reason provided"):
+    if MODERATION_ROLE_ID not in [role.id for role in interaction.user.roles]:
+        return await interaction.response.send_message("❌ You don’t have permission to use this command.", ephemeral=True)
+
+    try:
+        until = discord.utils.utcnow() + discord.timedelta(minutes=duration)
+        await member.timeout(until, reason=reason)
+        await interaction.response.send_message(f"⏳ {member.mention} has been timed out for **{duration} minutes**.\n**Reason:** {reason}")
+    except Exception as e:
+        await interaction.response.send_message(f"⚠️ Could not timeout {member.mention}: {e}", ephemeral=True)
+
+# --- Warn Command ---
+@app_commands.command(name="warn", description="Warn a member.")
+@app_commands.describe(member="The member to warn", reason="Reason for the warning")
+async def warn(interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
+    if MODERATION_ROLE_ID not in [role.id for role in interaction.user.roles]:
+        return await interaction.response.send_message("❌ You don’t have permission to use this command.", ephemeral=True)
+
+    # Warns usually just send a message — can also be logged to a channel if you like
+    try:
+        await member.send(f"⚠️ You have been warned in **{interaction.guild.name}**.\n**Reason:** {reason}")
+    except discord.Forbidden:
+        pass  # Can't DM user
+
+    await interaction.response.send_message(f"⚠️ {member.mention} has been warned.\n**Reason:** {reason}")
+    
 # Application result command
 @bot.tree.command(name="app_results", description="Send application result to user.", guild=guild)
 @app_commands.describe(user="User to DM", result="Pass or Fail", reason="Reason for result")
