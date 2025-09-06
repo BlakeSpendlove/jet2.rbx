@@ -3,12 +3,19 @@ from discord import app_commands
 from discord.ext import commands
 import os
 
-# Grab the MODERATION_ROLE_ID from your Railway environment
 MODERATION_ROLE_ID = int(os.getenv("MODERATION_ROLE_ID"))
+GUILD_ID = int(os.getenv("GUILD_ID"))  # add your test server ID in Railway
 
 class Moderation(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    async def cog_load(self):
+        """Force sync commands when the cog loads"""
+        guild = discord.Object(id=GUILD_ID)
+        self.bot.tree.copy_global_to(guild=guild)
+        await self.bot.tree.sync(guild=guild)
+        print(f"✅ Moderation commands synced to guild {GUILD_ID}")
 
     # Kick
     @app_commands.command(name="kick", description="Kick a member from the server.")
